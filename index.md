@@ -16,12 +16,9 @@ sections:
 
 # Fall 2026 {#current-offering}
 
-Activities for the current offering will appear here as they are released. The
-student-facing site does not contain teaching-team guides, solutions, or grading
-tests.
+Activities for the current offering will appear here as they are released.
 
 # Archive {#archive}
 
-The [2025 laboratory activities]({{ '/2025/' | relative_url }}) remain available as
-an archive. Submission instructions, starter repositories, and external links in
-those activities may have changed.
+[Activities from 2025]({{ '/2025/' | relative_url }}) are archived. Instructions,
+repos and link may have changed.
