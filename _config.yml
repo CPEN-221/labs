@@ -1,0 +1,26 @@
+title: CPEN 221 — Laboratory Activities
+description: Laboratory activities for CPEN 221A, Software Construction I.
+lang: en-CA
+timezone: America/Vancouver
+url: "https://cpen-221.github.io"
+baseurl: "/labs"
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  auto_ids: true
+  hard_wrap: false
+
+plugins:
+  - jekyll-seo-tag
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - assets/fonts/README.md
+  - scripts
+  - source
+  - vendor
+
+strict_front_matter: true

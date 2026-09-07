@@ -1,0 +1,162 @@
+---
+layout: default
+title: "Lab 1: Problem Solving"
+description: "Practise iteration and problem decomposition with three short programming tasks."
+hero_title: "Lab 1: Problem Solving"
+eyebrow: "CPEN 221A · 2025 lab archive"
+term: "2025 archive"
+page_kind: "lab"
+lab_number: "1"
+permalink: "/2025/problem-solving/"
+source_file: "Lab 1: Problem Solving.md"
+source_sha256: "353f8681b52557783f3b1bec52a578dac14507deb22a82d88461fdc420eafeb8"
+mobile_toc_label: "Jump to a lab section"
+previous_slug: "string-chopping"
+next_slug: "datatypes-and-dna"
+sections:
+  - id: "wireless-signal-strength"
+    title: "Wireless Signal Strength"
+  - id: "examples"
+    title: "Examples"
+  - id: "string-chopping"
+    title: "String Chopping"
+  - id: "examples-1"
+    title: "Examples"
+  - id: "addition-closure"
+    title: "Addition Closure"
+  - id: "examples-2"
+    title: "Examples"
+---
+
+<aside class="archive-note" aria-label="Archive status">
+  <strong>Archived activity.</strong> This page preserves the 2025 lab.
+  Submission instructions, starter repositories, and external links may have changed.
+</aside>
+
+<p>This lab assignment involves solving a few computational problems to make you comfortable with some standard programming structures (especially iteration).</p>
+<p><strong>You will submit your work on PrairieLearn.</strong></p>
+<blockquote>
+<p>During the lab sessions, the teaching assistants will advise on problem solving and will introduce you to the use of <code>git</code>, which is the source code control system that we will use. You will obtain the source code for one of the problems using GitHub Classroom and then you should attempt a solution and <em>push</em> your work to GitHub.</p>
+</blockquote>
+<p>For this lab activity, we <em>will not</em> grade you on the basis of whether you submitted your work to GitHub or not. You will have to use <code>git</code> and GitHub as we move ahead with the course so it is essential that you get comfortable with these tools.</p>
+<hr />
+<blockquote>
+<p>For Fall 2024, this lab activity involves three programming problems:</p>
+</blockquote>
+<ol type="1">
+<li><blockquote>
+<p>Wireless Signal Strength (straightforward computation);</p>
+</blockquote></li>
+<li><blockquote>
+<p>String Chopping (discussed as Lab 0 but was not graded then);</p>
+</blockquote></li>
+<li><blockquote>
+<p>Addition Closure.</p>
+</blockquote></li>
+</ol>
+<h2 id="wireless-signal-strength">Wireless Signal Strength</h2>
+<p>The strength of a wireless channel is measured in decibels, and the strength changes as the distance between the transmitter and the receiver increases. There are <a href="http://www.wirelesscommunication.nl/reference/contents.htm#propagation">several different models</a> for the signal strength of a channel but we will use one of the simplest models. If the initial signal strength is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math> decibels and the distance between the transmitter is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math> metres then the received signal strength is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>r</mi><mo>=</mo><mi>s</mi><mo>×</mo><mrow><mo stretchy="true" form="prefix">(</mo><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><msub><mi>a</mi><mi>i</mi></msub><msup><mi>d</mi><msub><mi>x</mi><mi>i</mi></msub></msup><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow><annotation encoding="application/x-tex">r = s \times \left( \sum_{i=1}^{n} {a_i}d^{x_i} \right).</annotation></semantics></math></p>
+<p>One can represent the model using an array <code>coefficients</code> (coefficients of the polynomial in the model) and an array <code>exponents</code> (exponents of the polynomial). The lengths of <code>coefficients</code> and <code>exponents</code> will be the same. Given <code>s</code>, <code>coefficients</code>, <code>exponents</code> and <code>d</code>, implement a method that computes <code>r</code>. For this exercise, you may assume that all inputs used for testing will be valid (e.g., no <code>null</code> inputs will be used).</p>
+<h2 id="examples">Examples</h2>
+<ol type="1">
+<li><code>s = 10</code>, <code>a = {5, 4}</code>, <code>x = {-1, 0}</code>, <code>d = 10</code>: <code>r = 45</code>.</li>
+<li><code>s = 100</code>, <code>a = {100}</code>, <code>x = {-2}</code>, <code>d = 13</code>: <code>r = 59.1715976331361</code>.</li>
+<li><code>s = 5</code>, <code>a = {-1, 20}</code>, <code>x = {1, 0}</code>, <code>d = 25</code>: <code>r = -25.0</code> (some models are not realistic!).</li>
+</ol>
+<h2 id="string-chopping">String Chopping</h2>
+<p>In Edwardian England, the punishment of <a href="https://en.wikipedia.org/wiki/Hanged,_drawn_and_quartered">drawn, hanged and quartered</a> was the common penalty for treason. This activity involves nothing as grisly; here we are merely chopping up parts of a string.</p>
+<p>For a <code>String</code> <code>s</code>, we can refer the first third of a <code>s</code> as its <strong>head</strong>, the last third of it as its <strong>tail</strong> and the remaining characters as its <strong>middle</strong>.</p>
+<p>If <code>l</code> is the length of a <code>String</code>, then let <code>t = ceiling(l/3)</code> represent the length of the head and tail. The <strong>ceiling</strong> of a non-integer value <code>x</code> is the smallest integer <code>c</code> such that <code>c &gt;= x</code>. <code>ceiling(4.3)</code> is <code>5</code>. <code>ceiling(5)</code> is <code>5</code>.</p>
+<p>For the <code>String</code> <code>"marathon"</code>, the head is <code>"mar"</code>, the middle is <code>"at"</code>, and the tail is <code>"hon"</code>.</p>
+<p>One can chop a string by removing its head, middle or tail. Chopping off the head of <code>"marathon"</code> gives us the <code>String</code> <code>"athon"</code>. Chopping off the tail of <code>"marathon"</code> gives us the <code>String</code> <code>"marat"</code>, and chopping the middle gives us <code>"marhon"</code>.</p>
+<p>We will use <code>h</code> or <code>H</code> to denote chopping off the head of a string, <code>t</code> or <code>T</code> for chopping off the tail, and <code>m</code> or <code>M</code> for chopping off the middle.</p>
+<p>We can dice <code>"marathon"</code> to the single character <code>t</code> using the chop sequence <code>"THHH"</code>, which represents the following sequence of chops: <code>"marathon" -&gt; "marat" -&gt; "rat" -&gt; "at" -&gt; 't'</code>.</p>
+<p>The end goal of this activity is to develop a program that determines, for each letter of the alphabet, the chopping sequence that allows us to obtain that letter from a given string.</p>
+<blockquote>
+<h2 id="examples-1">Examples</h2>
+</blockquote>
+<ol type="1">
+<li><blockquote>
+<p>Input: <code>"x"</code>; Output: <code>{"NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "", "NO", "NO"}</code>. We do not need to chop the string to obtain <code>'x'</code>.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Input: <code>"qwertyuiopasdfghjkl"</code>; Output: <code>{"HTHMTT", "NO", "NO", "HHTMTH", "MTMHTT", "HHTHMT", "HHHMTT", "HHHMTH", "HTTMTT", "HHHHMT", "HHHHHT", "HHHHHH", "NO", "NO", "HTTMTH", "HTTHMT", "MTMTTT", "MTHTTT", "HHTMTT", "MTHTTH", "MHMTTH", "NO", "MTMTTH", "NO", "MHMTTT", "NO"}</code>.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Input: <code>"aaaaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaa"</code>; Output: <code>{"HHHHHHH", "HMHTTTT", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO"}</code></p>
+</blockquote></li>
+</ol>
+<h2 id="addition-closure">Addition Closure</h2>
+<p>You are given a <code>List</code> of <code>Integer</code>s, <code>listInt</code>, and another integer <code>n</code>. We will define <em>closure under addition</em> for <code>listInt</code> to mean that for <em>any</em> two distinct values of <code>i</code> and <code>j</code>, <code>(listInt[i]+listInt[j]) % n</code> is in <code>listInt</code> or <code>k * n + (listInt[i]+listInt[j]) % n</code> (for some int <code>k</code>) is in <code>listInt</code>.</p>
+<p>Your goal is to determine if a given <code>List</code> of <code>Integer</code>s is closed under addition for some modulus <code>n</code>. You will implement a method, <em>isClosed</em>, that will return <code>true</code> if a <code>List</code> is closed under addition for a given <code>n</code> and <code>false</code> otherwise.</p>
+<blockquote>
+<h2 id="examples-2">Examples</h2>
+</blockquote>
+<blockquote>
+<h4 id="input-list--1-0-1-n--2">input list: [-1, 0, 1]; <code>n</code> = 2</h4>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Returns: <code>true</code></p>
+</blockquote></li>
+<li><blockquote>
+<p><code>(-1 + 0) % 2 = -1; (-1 + 1) % 2 = 0, (0 + 1) % 2 = 1</code>.</p>
+</blockquote></li>
+</ul>
+<blockquote>
+<h4 id="input-list--2-3-n--4">input list: [-2, 3]; <code>n</code> = 4</h4>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Returns: <code>false</code></p>
+</blockquote></li>
+</ul>
+<blockquote>
+<h4 id="input-list-1-1-0-n--2">input list: [1, 1, 0]; <code>n</code> = 2</h4>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Returns: <code>true</code></p>
+</blockquote></li>
+</ul>
+<blockquote>
+<h4 id="input-list-1-1-n--3">input list: [1, 1]; <code>n</code> = 3</h4>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Returns: <code>false</code></p>
+</blockquote></li>
+</ul>
+<blockquote>
+<h4 id="input-list-1-1-2-n--2">input list: [1, 1, 2]; <code>n</code> = 2</h4>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Returns: <code>true</code></p>
+</blockquote></li>
+</ul>
+<blockquote>
+<h4 id="input-list-0-1-1-2-n--2">input list: [0, 1, 1, 2]; <code>n</code> = 2</h4>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Returns: <code>true</code></p>
+</blockquote></li>
+</ul>
+<blockquote>
+<h4 id="input-list-0-1-100-50-50-n--100">input list: [0, 1, 100, 50, 50], <code>n</code> = 100</h4>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Return: <code>false</code></p>
+</blockquote></li>
+</ul>
+<blockquote>
+<h4 id="input-list-0-1-100-50-50-n--50">input list: [0, 1, 100, 50, 50], <code>n</code> = 50</h4>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Return: <code>true</code></p>
+</blockquote></li>
+</ul>

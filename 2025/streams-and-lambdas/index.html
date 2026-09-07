@@ -1,0 +1,481 @@
+---
+layout: default
+title: "Lab 8: Streams and Lambdas"
+description: "Use stream pipelines, optional values, lambdas, and functional interfaces."
+hero_title: "Lab 8: Streams and Lambdas"
+eyebrow: "CPEN 221A · 2025 lab archive"
+term: "2025 archive"
+page_kind: "lab"
+lab_number: "8"
+permalink: "/2025/streams-and-lambdas/"
+source_file: "Lab 8: Streams and Lambdas.md"
+source_sha256: "c8f8e1c8e02263326aa8065a5ad2ae087e38b09ca9c677d3fb5a4463be03a746"
+mobile_toc_label: "Jump to a lab section"
+previous_slug: "interfaces-subtypes-and-representation-invariants"
+next_slug: "evaluating-arithmetic-expressions"
+sections:
+  - id: "overview-what-are-java-streams"
+    title: "Overview: What Are Java Streams?"
+  - id: "learning-outcomes"
+    title: "Learning Outcomes"
+  - id: "key-characteristics-of-streams"
+    title: "Key Characteristics of Streams"
+  - id: "the-stream-pipeline"
+    title: "The Stream Pipeline"
+  - id: "types-of-stream-operations"
+    title: "Types of Stream Operations"
+  - id: "using-streams-for-parallel-processing"
+    title: "Using Streams for Parallel Processing"
+  - id: "introduction-to-optional"
+    title: "Introduction to Optional"
+  - id: "stream-example-with-a-complex-object-tiktok-data"
+    title: "Stream Example with a Complex Object: TikTok Data"
+  - id: "introduction-to-lambdas"
+    title: "Introduction to Lambdas"
+  - id: "syntax-of-a-lambda-expression"
+    title: "Syntax of a Lambda Expression"
+  - id: "lambdas-in-practice"
+    title: "Lambdas in Practice"
+  - id: "using-lambdas-with-a-functional-interface"
+    title: "Using Lambdas with a Functional Interface"
+  - id: "using-lambdas-with-streams"
+    title: "Using Lambdas with Streams"
+  - id: "lambdas-with-custom-types"
+    title: "Lambdas with Custom Types"
+  - id: "when-to-use-lambdas"
+    title: "When to Use Lambdas"
+  - id: "more-examples-with-lambdas"
+    title: "More Examples with Lambdas"
+  - id: "summary"
+    title: "Summary"
+  - id: "grading"
+    title: "Grading"
+---
+
+<aside class="archive-note" aria-label="Archive status">
+  <strong>Archived activity.</strong> This page preserves the 2025 lab.
+  Submission instructions, starter repositories, and external links may have changed.
+</aside>
+
+<h2 id="overview-what-are-java-streams">Overview: What Are Java Streams?</h2>
+<blockquote>
+<p>Java <code>Stream</code>s are a powerful feature introduced in Java 8 that allows for functional-style operations on collections of data. A <code>Stream</code> is a sequence of elements that supports aggregate operations, such as filtering, mapping, and reducing, in a clean and declarative manner.</p>
+</blockquote>
+<hr />
+<blockquote>
+<h2 id="learning-outcomes">Learning Outcomes</h2>
+</blockquote>
+<ul>
+<li><blockquote>
+<p><strong>Understand the Basics of Streams</strong></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<blockquote>
+<p>Explain the core concepts of Streams, including intermediate and terminal operations.</p>
+</blockquote>
+</blockquote></li>
+<li><blockquote>
+<blockquote>
+<p>Describe the difference between sequential and parallel streams.</p>
+</blockquote>
+</blockquote></li>
+</ul></li>
+<li><blockquote>
+<p><strong>Apply Stream Operations to Complex Data Types</strong></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<blockquote>
+<p>Implement common Stream operations such as <code>filter()</code>, <code>map()</code>, <code>sorted()</code>, and <code>collect()</code> to process collections of custom objects.</p>
+</blockquote>
+</blockquote></li>
+<li><blockquote>
+<blockquote>
+<p>Use <code>Stream</code> pipelines to transform, sort, and aggregate data from objects like <code>TikTokVideo</code>.</p>
+</blockquote>
+</blockquote></li>
+</ul></li>
+<li><blockquote>
+<p><strong>Use Functional Programming Techniques for Data Processing</strong></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<blockquote>
+<p>Write concise, declarative code using <code>Stream</code>s to solve practical problems, such as ranking videos by engagement and finding the most active uploader.</p>
+</blockquote>
+</blockquote></li>
+<li><blockquote>
+<blockquote>
+<p>Apply functional programming concepts like <code>reduce()</code> to accumulate results and implement custom aggregation logic.</p>
+</blockquote>
+</blockquote></li>
+</ul></li>
+<li><blockquote>
+<p><strong>Work with <code>Optional</code> to Handle Missing Values</strong></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<blockquote>
+<p>Use <code>Optional</code> to handle cases where data may be absent, avoiding null values.</p>
+</blockquote>
+</blockquote></li>
+<li><blockquote>
+<blockquote>
+<p>Leverage <code>Optional</code> in conjunction with <code>Stream</code>s for safe and efficient processing, including methods like <code>ifPresent()</code> and <code>orElse()</code>.</p>
+</blockquote>
+</blockquote></li>
+</ul></li>
+<li><blockquote>
+<p><strong>Identify and Correct Common Mistakes in Stream-Based Code</strong></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<blockquote>
+<p>Analyze and critique different implementations of <code>Stream</code>-based operations, identifying subtle semantic errors that affect correctness (e.g., incorrect sorting logic, misused reduction operations).</p>
+</blockquote>
+</blockquote></li>
+<li><blockquote>
+<blockquote>
+<p>Correctly select and apply Stream operations to achieve the desired results in data processing tasks.</p>
+</blockquote>
+</blockquote></li>
+</ul></li>
+<li><blockquote>
+<p><strong>Explain the Benefits and Trade-offs of Stream Processing</strong></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<blockquote>
+<p>Discuss the performance implications of using <code>Stream</code>s, including lazy evaluation and parallel stream processing.</p>
+</blockquote>
+</blockquote></li>
+<li><blockquote>
+<blockquote>
+<p>Compare traditional imperative programming with functional approaches using <code>Stream</code>s, highlighting readability and maintainability benefits.</p>
+</blockquote>
+</blockquote></li>
+</ul></li>
+<li><blockquote>
+<p><strong>Implement and Apply Lambda Expressions</strong></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<blockquote>
+<p>Write concise and expressive lambda expressions to pass behavior as parameters to methods, such as filtering, transforming, or reducing data. You should be able to utilize functional interfaces like <code>Predicate&lt;T&gt;</code>, <code>Function&lt;T, R&gt;</code>, and <code>Consumer&lt;T&gt;</code> to perform common operations on collections.</p>
+</blockquote>
+</blockquote></li>
+</ul></li>
+</ul>
+<hr />
+<h2 id="key-characteristics-of-streams">Key Characteristics of <code>Stream</code>s</h2>
+<ol type="1">
+<li><strong>Functional</strong>: Streams encourage functional programming. You can process data without modifying the original collection, and operations are defined in terms of transformations on data.</li>
+<li><strong>Lazy Evaluation</strong>: Streams are lazily evaluated, meaning operations are not executed until a terminal operation (like <code>collect()</code> or <code>reduce()</code>) is invoked. This improves performance by avoiding unnecessary calculations.</li>
+<li><strong>Parallelizable</strong>: Streams can be processed in parallel with minimal effort by simply calling <code>parallelStream()</code> instead of <code>stream()</code>. This makes it easier to take advantage of multi-core processors.</li>
+<li><strong>Non-Mutating</strong>: Stream operations do not modify the source collection but instead return new collections or values.</li>
+</ol>
+<hr />
+<h2 id="the-stream-pipeline">The Stream Pipeline</h2>
+<p>Streams operate in a pipeline of operations. This pipeline consists of:</p>
+<ol type="1">
+<li><strong>Source</strong>: The data to be processed (like a <code>List</code>, <code>Set</code>, or an array).</li>
+<li><strong>Intermediate Operations</strong>: Operations that transform or filter the data (like <code>filter()</code>, <code>map()</code>, <code>sorted()</code>). These operations are lazy and return a new stream.</li>
+<li><strong>Terminal Operation</strong>: The final operation that triggers the execution of the pipeline and produces a result (like <code>collect()</code>, <code>reduce()</code>, or <code>forEach()</code>).</li>
+</ol>
+<p>Here’s a simple example of a <code>Stream</code> pipeline:</p>
+<pre class="java"><code>List&lt;String&gt; words = Arrays.asList(&quot;apple&quot;, &quot;banana&quot;, &quot;cherry&quot;, &quot;date&quot;, &quot;elderberry&quot;);
+
+List&lt;String&gt; result = words.stream()
+    .filter(word -&gt; word.length() &gt; 5)
+    .sorted()
+    .collect(Collectors.toList());
+
+System.out.println(result);  // Outputs: [banana, cherry, elderberry]</code></pre>
+<p><strong>In this example:</strong></p>
+<ul>
+<li>Source: The <code>List</code> of words.</li>
+<li>Intermediate Operations: Filtering words with length greater than 5 and then sorting the remaining words.</li>
+<li>Terminal Operation: Collecting the final list.</li>
+</ul>
+<hr />
+<h2 id="types-of-stream-operations">Types of Stream Operations</h2>
+<ul>
+<li><p><strong>Intermediate Operations</strong>:</p>
+<p>These operations return a new Stream and can be chained together. They are lazy and don’t perform any actions until a terminal operation is executed. Common intermediate operations include:</p></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><code>filter()</code></th>
+<th>Filters elements based on a predicate.</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>map()</code></td>
+<td>Transforms elements by applying a function.</td>
+</tr>
+<tr>
+<td><code>sorted()</code></td>
+<td>Sorts the stream.</td>
+</tr>
+<tr>
+<td><code>distinct()</code></td>
+<td>Removes duplicates.</td>
+</tr>
+</tbody>
+</table>
+<pre><code>Example of `map()` and `filter()`:</code></pre>
+<pre class="java"><code>List&lt;Integer&gt; numbers = Arrays.asList(1, 2, 3, 4, 5);
+List&lt;Integer&gt; squaredNumbers = numbers.stream()
+    .map(n -&gt; n * n)  // Square each number
+    .filter(n -&gt; n &gt; 10)  // Keep only numbers greater than 10
+    .collect(Collectors.toList());  // Collect the results into a list
+
+System.out.println(squaredNumbers);  // Outputs: [16, 25]</code></pre>
+<ul>
+<li><p><strong>Terminal Operations</strong>:</p>
+<p>These operations produce a result or a side effect, such as a collection, a single value, or an action on each element. They trigger the execution of the entire pipeline. Common terminal operations include:</p></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><code>collect()</code></th>
+<th>Gathers elements of the stream into a collection like a <code>List</code>, <code>Set</code>, or <code>Map</code>.</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>forEach()</code></td>
+<td>Performs an action for each element of the stream.</td>
+</tr>
+<tr>
+<td><code>reduce()</code></td>
+<td>Reduces the elements of a stream into a single value (e.g., summing, finding max/min).</td>
+</tr>
+<tr>
+<td><code>count()</code></td>
+<td>Counts the number of elements in the stream.</td>
+</tr>
+<tr>
+<td><code>findFirst()</code></td>
+<td>Finds the first element of the stream.</td>
+</tr>
+</tbody>
+</table>
+<pre><code>**Example of `forEach()`:**</code></pre>
+<pre class="java"><code>List&lt;String&gt; names = Arrays.asList(&quot;Alice&quot;, &quot;Bob&quot;, &quot;Charlie&quot;);
+names.stream()
+    .forEach(name -&gt; System.out.println(&quot;Hello, &quot; + name));</code></pre>
+<hr />
+<h2 id="using-streams-for-parallel-processing">Using Streams for Parallel Processing</h2>
+<p>One of the major advantages of <code>Stream</code>s is the ability to easily process data in parallel, leveraging modern multi-core processors. By simply replacing <code>stream()</code> with <code>parallelStream()</code>, the <code>Stream</code> is processed concurrently.</p>
+<p><strong>Example of parallel processing</strong></p>
+<pre class="java"><code>List&lt;Integer&gt; numbers = Arrays.asList(1, 2, 3, 4, 5);
+int sum = numbers.parallelStream()
+    .reduce(0, Integer::sum);
+
+System.out.println(sum);</code></pre>
+<p>In this case, the sum is calculated in parallel, potentially speeding up execution for larger datasets.</p>
+<hr />
+<h2 id="introduction-to-optional">Introduction to <code>Optional</code></h2>
+<p>In functional programming with <code>Stream</code>s, it’s common to encounter cases where a value might be absent, such as the result of filtering. Instead of returning null and risking <code>null</code> pointer exceptions, Java provides <code>Optional&lt;T&gt;</code>, a container that may or may not hold a value.</p>
+<p><strong>Common <code>Optional</code> Methods</strong>:</p>
+<table>
+<thead>
+<tr>
+<th><code>isPresent()</code></th>
+<th>Checks if a value is present.</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ifPresent(Consumer)</code></td>
+<td>Executes a block of code if a value is present.</td>
+</tr>
+<tr>
+<td><code>orElse(T other)</code></td>
+<td>Returns the value if present, or a default value if not.</td>
+</tr>
+<tr>
+<td><code>map()</code></td>
+<td>Transforms the value inside the <code>Optional</code>.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example using <code>Optional</code>:</strong></p>
+<pre class="java"><code>Optional&lt;String&gt; maybeName = Optional.of(&quot;Alice&quot;);
+maybeName.ifPresent(name -&gt; System.out.println(&quot;Hello, &quot; + name));
+
+Optional&lt;String&gt; emptyName = Optional.empty();
+System.out.println(emptyName.orElse(&quot;Guest&quot;));</code></pre>
+<p><strong>Combining <code>Stream</code>s and <code>Optional</code></strong></p>
+<p><code>Stream</code>s and <code>Optional</code> often work hand-in-hand when filtering or reducing data. For example, you might want to find the first element that matches a condition, and if no match is found, return an <code>Optional.empty()</code>.</p>
+<p><strong>Example:</strong></p>
+<pre class="java"><code>List&lt;String&gt; names = Arrays.asList(&quot;Alice&quot;, &quot;Bob&quot;, &quot;Charlie&quot;);
+Optional&lt;String&gt; firstMatch = names.stream()
+    .filter(name -&gt; name.startsWith(&quot;C&quot;))
+    .findFirst();
+
+firstMatch.ifPresent(name -&gt; System.out.println(&quot;First match: &quot; + name));</code></pre>
+<p><code>Optional</code> <strong>is not all good</strong></p>
+<p>We wanted to introduce you to Java’s <code>Optional</code> type because it exists and you might encounter it in code. <em>But</em> it is not all good. Here is a deeper discussion on the <code>Optional</code> type:</p>
+<p><a href="https://ubc-ece.craft.me/cpen221-notes-JavaOptional">Some Comments on Java’s Optional Type</a></p>
+<hr />
+<h2 id="stream-example-with-a-complex-object-tiktok-data">Stream Example with a Complex Object: TikTok Data</h2>
+<p>Let’s say we have a <code>TikTokVideo</code> class that contains fields like <code>videoId</code>, <code>uploader</code>, <code>likes</code>, <code>shares</code>, and <code>comments</code>. Here’s how we could use <code>Stream</code>s to perform operations on a list of <code>TikTokVideo</code> objects.</p>
+<p><strong>Example: Sorting TikTok videos by total engagement (likes + shares + comments):</strong></p>
+<pre class="java"><code>List&lt;TikTokVideo&gt; rankedByEngagement = videos.stream()
+    .sorted(Comparator.comparingInt(video -&gt; video.getLikes() + video.getShares() + video.getComments()).reversed())
+    .collect(Collectors.toList());
+
+rankedByEngagement.forEach(video -&gt; {
+    int totalEngagement = video.getLikes() + video.getShares() + video.getComments();
+    System.out.println(&quot;Video ID: &quot; + video.getVideoId() + &quot;, Total Engagement: &quot; + totalEngagement);
+});</code></pre>
+<p>In this example, we:</p>
+<ul>
+<li>Use <code>stream()</code> to create a stream of videos.</li>
+<li>Sort the videos by the sum of likes, shares, and comments (engagement).</li>
+<li>Collect the sorted videos into a List.</li>
+<li>Print the total engagement for each video.</li>
+</ul>
+<p><strong>Example: Finding Recent Videos</strong></p>
+<pre class="java"><code> List&lt;TikTokVideo&gt; recentVideos = videos.stream()
+            .filter(video -&gt; video.getUploadTime()
+            .isAfter(LocalDateTime.now()
+            .minusDays(7)))
+            .collect(Collectors.toList());
+recentVideos.forEach(video -&gt;
+            System.out.println(&quot;Recent video ID: &quot; + video.getVideoId()
+                               + &quot;, Uploaded: &quot; + video.getUploadTime()));</code></pre>
+<p><strong>Example: Calculating Total Engagement Across All TikTok Videos</strong></p>
+<p>Let’s say we want to calculate the total engagement (sum of likes, shares, and comments) across all TikTok videos. The <code>reduce()</code> operation can help us aggregate this total in a functional and clean way.</p>
+<p>Here’s an example:</p>
+<pre class="java"><code>int totalEngagement = videos.stream()
+    .map(video -&gt; video.getLikes() + video.getShares() + video.getComments())
+    .reduce(0, Integer::sum);
+
+System.out.println(&quot;Total Engagement across all videos: &quot; + totalEngagement);</code></pre>
+<p><strong>Example: Finding the Most Active Uploader</strong></p>
+<pre class="java"><code>  Optional&lt;Map.Entry&lt;String, Long&gt;&gt; mostActiveUploader = videos.stream()
+      .collect(Collectors.groupingBy(TikTokVideo::getUploader, Collectors.counting()))
+      .entrySet().stream()
+      .max(Map.Entry.comparingByValue());</code></pre>
+<hr />
+<h2 id="introduction-to-lambdas">Introduction to Lambdas</h2>
+<p>Lambda expressions allow you to express instances of functional interfaces (interfaces with a single abstract method) in a more concise way. They provide a shorthand for creating anonymous classes and can make your code much cleaner and easier to read, especially when working with functional programming constructs like Streams.</p>
+<p><strong>Why Use Lambdas?</strong></p>
+<p>Lambdas are particularly useful when you need to pass behavior (like a block of code) as a parameter to a method. Instead of writing verbose inner classes, lambdas allow you to focus on what should be done, without all the boilerplate code around how to structure it.</p>
+<p>Consider this common scenario: You want to filter or transform a collection of data. Traditionally, you might create an anonymous class that implements an interface like <code>Comparator</code> or <code>Runnable</code>. With lambdas, you can achieve the same result with much less code.</p>
+<hr />
+<h2 id="syntax-of-a-lambda-expression">Syntax of a Lambda Expression</h2>
+<p>A lambda expression has three parts:</p>
+<ul>
+<li>Parameter list: Defines the input to the lambda (like a method’s parameter list).</li>
+<li>Arrow operator (-&gt;): Separates the parameter list from the body of the lambda.</li>
+<li>Body: Contains the logic to be executed (like the body of a</li>
+</ul>
+<pre class="java"><code>(parameters) -&gt; expression</code></pre>
+<p>If there’s only one parameter, you can omit parentheses.</p>
+<p>If there’s only one statement in the body, you can omit curly braces.</p>
+<p><strong>Examples</strong></p>
+<ul>
+<li>Single parameter, single line body</li>
+</ul>
+<pre class="java"><code>x -&gt; x * x</code></pre>
+<ul>
+<li>Multiple parameters, multi-line body</li>
+</ul>
+<pre class="java"><code>(a, b) -&gt; {
+    int result = a + b;
+    return result;
+}</code></pre>
+<hr />
+<h2 id="lambdas-in-practice">Lambdas in Practice</h2>
+<h2 id="using-lambdas-with-a-functional-interface">Using Lambdas with a Functional Interface</h2>
+<p>A functional interface is an interface that has exactly one abstract method. Java provides several commonly used functional interfaces, including:</p>
+<ul>
+<li><code>Predicate</code>: Takes a single argument and returns a boolean (used for filtering).</li>
+<li><code>Function</code>: Takes a single argument and returns a result (used for transforming data).</li>
+<li><code>Consumer</code>: Takes a single argument and performs an action without returning a result (used for side effects like printing).</li>
+</ul>
+<p><strong>Examples</strong></p>
+<p><em>Filtering a list of integers to find numbers greater than 10</em></p>
+<pre class="java"><code>Predicate&lt;Integer&gt; isGreaterThan10 = x -&gt; x &gt; 10;</code></pre>
+<p><em>Doubling a number and returning the result</em></p>
+<pre class="java"><code>Function&lt;Integer, Integer&gt; doubleNumber = x -&gt; x * 2;</code></pre>
+<p><em>Printing out each element in a list</em></p>
+<pre class="java"><code>Consumer&lt;String&gt; printString = s -&gt; System.out.println(s);</code></pre>
+<h2 id="using-lambdas-with-streams">Using Lambdas with Streams</h2>
+<p>Lambdas are especially powerful when used with <code>Stream</code>s. Streams provide a way to process data declaratively, and lambdas allow you to specify what should be done with the data.</p>
+<p><strong>Example: Using Lambdas with <code>filter()</code> and <code>map()</code></strong></p>
+<pre class="java"><code>List&lt;Integer&gt; numbers = Arrays.asList(1, 2, 3, 4, 5, 6);
+List&lt;Integer&gt; filteredAndSquared = numbers.stream()
+    .filter(x -&gt; x % 2 == 0)  // Keep only even numbers
+    .map(x -&gt; x * x)  // Square each remaining number
+    .collect(Collectors.toList());
+
+System.out.println(filteredAndSquared);  // Outputs: [4, 16, 36]</code></pre>
+<h2 id="lambdas-with-custom-types">Lambdas with Custom Types</h2>
+<p>Lambdas can also be applied to more complex data types, like objects. For example, imagine a <code>Person</code> class with fields like <code>name</code> and <code>age</code>. You can use a lambda to extract or manipulate the fields of <code>Person</code> instances.</p>
+<p><strong>Example: Filtering and Transforming a List of Objects</strong></p>
+<pre class="java"><code>List&lt;Person&gt; people = Arrays.asList(
+    new Person(&quot;Alice&quot;, 30),
+    new Person(&quot;Bob&quot;, 20),
+    new Person(&quot;Charlie&quot;, 40)
+);
+
+// Filter people older than 25 and extract their names
+List&lt;String&gt; names = people.stream()
+    .filter(person -&gt; person.getAge() &gt; 25)  // Filter by age
+    .map(Person::getName)  // Extract the name
+    .collect(Collectors.toList());
+
+System.out.println(names);  // Outputs: [Alice, Charlie]</code></pre>
+<hr />
+<h2 id="when-to-use-lambdas">When to Use Lambdas</h2>
+<ul>
+<li>Passing Behavior as a Parameter: You can pass lambdas to methods as parameters, making your code more flexible and reusable. Instead of writing a separate class, a lambda lets you pass a small block of logic directly.</li>
+<li>Reducing Boilerplate Code: Lambdas eliminate the need for boilerplate code, such as creating anonymous classes, making your code more concise and easier to read.</li>
+<li>Functional Programming: Lambdas enable functional programming in Java, allowing you to process collections of data with expressive, declarative code.</li>
+</ul>
+<h2 id="more-examples-with-lambdas">More Examples with Lambdas</h2>
+<p><strong>Filtering a list of numbers</strong></p>
+<pre class="java"><code>List&lt;Integer&gt; numbers = Arrays.asList(1, 2, 3, 4, 5);
+List&lt;Integer&gt; evenNumbers = numbers.stream()
+    .filter(n -&gt; n % 2 == 0)  // Lambda to filter even numbers
+    .collect(Collectors.toList());
+
+System.out.println(evenNumbers);  // Outputs: [2, 4]</code></pre>
+<p><strong>Transforming data</strong></p>
+<pre class="java"><code>List&lt;String&gt; names = Arrays.asList(&quot;Alice&quot;, &quot;Bob&quot;, &quot;Charlie&quot;);
+List&lt;String&gt; upperCaseNames = names.stream()
+    .map(name -&gt; name.toUpperCase())  // Lambda to convert each name to uppercase
+    .collect(Collectors.toList());
+
+System.out.println(upperCaseNames);  // Outputs: [ALICE, BOB, CHARLIE]</code></pre>
+<hr />
+<blockquote>
+<h2 id="summary">Summary</h2>
+</blockquote>
+<blockquote>
+<p>Streams enable clean, functional, and efficient processing of collections, reducing the need for verbose loops and conditionals. They make it easier to perform complex operations like filtering, transforming, and reducing data, all while keeping the code concise and readable.</p>
+</blockquote>
+<blockquote>
+<p><code>Optional</code> complements <code>Stream</code>s by providing a way to handle absent values safely, avoiding null and potential runtime errors.</p>
+</blockquote>
+<blockquote>
+<p>Lambdas allow you to write more concise code by eliminating boilerplate associated with anonymous inner classes. With fewer lines of code, there’s less chance of introducing errors, and it’s easier to understand what the code does. Lambdas let you focus on what needs to be done, without the clutter of how the code is structured. Lambdas enable functional programming patterns in Java, allowing you to treat functions as first-class citizens. You can pass behaviour (i.e., a lambda) to a method, store it in variables, or return it from other methods.</p>
+</blockquote>
+<blockquote>
+<p>By understanding and mastering these tools, you can write more expressive, maintainable, and efficient Java code.</p>
+</blockquote>
+<hr />
+<blockquote>
+<h2 id="grading">Grading</h2>
+</blockquote>
+<blockquote>
+<p>You will answer questions on PrairieLearn.</p>
+</blockquote>

@@ -1,0 +1,622 @@
+---
+layout: default
+title: "Lab 10: Client-Server Pattern and Text Processing"
+description: "Compute document metrics through a JSON client-server protocol and examine concurrency."
+hero_title: "Lab 10: Client-Server Pattern and Text Processing"
+eyebrow: "CPEN 221A · 2025 lab archive"
+term: "2025 archive"
+page_kind: "lab"
+lab_number: "10"
+permalink: "/2025/client-server-and-text-processing/"
+source_file: "Lab 10: Client-Server Pattern and Text Document Processing.md"
+source_sha256: "690efa7119eaa36b0b3a8d36f7dc48e6391cc511849c35be113ee771f38a1085"
+mobile_toc_label: "Jump to a lab section"
+previous_slug: "evaluating-arithmetic-expressions"
+next_slug: "stable-matching-and-concurrency"
+sections:
+  - id: "overview"
+    title: "Overview"
+  - id: "learning-outcomes"
+    title: "Learning Outcomes"
+  - id: "text-document-metrics"
+    title: "Text Document Metrics"
+  - id: "introduction-to-json"
+    title: "Introduction to JSON"
+  - id: "json-structure-for-client-server-communication"
+    title: "JSON Structure for Client-Server Communication"
+  - id: "main-tasks"
+    title: "Main Tasks"
+  - id: "testing-concurrent-programs"
+    title: "Testing Concurrent Programs"
+  - id: "running-the-server-and-the-client-from-the-command-line"
+    title: "Running the Server and the Client from the Command Line"
+  - id: "containers-and-docker"
+    title: "Containers and Docker"
+  - id: "creating-a-docker-image-and-container-for-the-server-and-the-client"
+    title: "Creating a Docker Image and Container for the Server and the Client"
+  - id: "summary"
+    title: "Summary"
+  - id: "grading"
+    title: "Grading"
+---
+
+<aside class="archive-note" aria-label="Archive status">
+  <strong>Archived activity.</strong> This page preserves the 2025 lab.
+  Submission instructions, starter repositories, and external links may have changed.
+</aside>
+
+<h2 id="overview">Overview</h2>
+<blockquote>
+<p>In this assignment, you will build a client-server application that calculates document metrics for URLs provided by the client. You will implement (modify) a Java server that accepts requests containing URLs, retrieves the content of each URL, and computes various text metrics, including average word length, unique word ratio, and hapax legomena ratio. The client will send JSON requests to the server and display the metrics received in the JSON response. You will update the server to utilize different forms of concurrency. You will also gain an understanding of how to test concurrent programs, and your will be exposed some other software deployment technologies and techniques.</p>
+</blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>❗️For certain aspects of this assignment, you may have to make adjustments based on the version of Gradle that you are using.</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>ℹ️ Also read: <a href="https://ubc-ece.craft.me/cpen221-TheBuildProcess">The Build Process and Build Tools</a> and <a href="https://ubc-ece.craft.me/cpen221-lab9-arithmetic">Lab 9</a>.</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+<hr />
+<blockquote>
+<h2 id="learning-outcomes">Learning Outcomes</h2>
+</blockquote>
+<blockquote>
+<p><strong>Network Communication with Sockets</strong></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Understand and implement basic client-server communication using Java sockets.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Establish a reliable connection between a client and server for data exchange.</p>
+</blockquote></li>
+</ul>
+<blockquote>
+<p><strong>JSON Parsing and Data Exchange</strong></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Use JSON as a data format for information exchange.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Employ the Gson library to parse JSON requests and construct JSON responses.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Develop a structured request-response format for exchanging data between distributed components.</p>
+</blockquote></li>
+</ul>
+<blockquote>
+<p><strong>Concurrent Processing in Java</strong></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Use multithreading to enable the server to handle multiple clients at the same time.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Identify opportunities for parallel processing of client requests.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Apply safe approaches to parallel data processing.</p>
+</blockquote></li>
+</ul>
+<blockquote>
+<p><strong>Extended Use of Command Line Arguments</strong></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Use command line flags to pass parameters to a program.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Use Gradle settings for default command line arguments.</p>
+</blockquote></li>
+</ul>
+<blockquote>
+<p><strong>File and I/O Handling</strong></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Read and process URLs from an external text file on the client side.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Manage input and output streams for communication over sockets in a structured and efficient manner.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Analyze the benefits and limitations of parallel processing in handling multiple client requests.</p>
+</blockquote></li>
+</ul>
+<blockquote>
+<p><strong>Software Operations and Deployment</strong></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Configure Gradle to run multiple <code>main</code> methods.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Configure Gradle to produce multiple executable JAR files.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Package dependencies into JAR files to create standalone executables for both client and server applications.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Set up a Java project with distinct client and server applications using a single Gradle project.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Organize code and build configurations for maintainable and scalable software projects.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Use Docker containers to easily share and deploy applications.</p>
+</blockquote></li>
+</ul>
+<hr />
+<h2 id="text-document-metrics">Text Document Metrics</h2>
+<p>In this assignment, the computational tasks involve computing certain metrics for text documents.</p>
+<ul>
+<li><strong>Average Word Length (AWL)</strong>: This metric calculates the average length of words in the document. By iterating over all words, summing their lengths, and dividing by the total word count, this measure gives a sense of the text’s linguistic complexity and verbosity.</li>
+<li><strong>Unique Word Ratio (UWR)</strong>: This metric computes the ratio of unique words to the total number of words. It is calculated by identifying all unique words (ignoring case) and dividing the unique word count by the total word count. This ratio helps understand lexical diversity—how varied the vocabulary is within the text.</li>
+<li><strong>Hapax Legomena Ratio (HLR)</strong>: This metric represents the ratio of words that appear only once (known as “hapax legomena”) to the total word count. By isolating words that appear a single time and dividing by the total word count, this metric offers another measure of text, highlighting the proportion of unique and rarely used words. For some linguistic analysis, one excludes the hapax legomena because they are considered outlier words.</li>
+</ul>
+<p>The server will receive a list of documents to process. The documents are specified by URLs for their content. The server should extract the text given the URL and compute the three metrics: AWL, UWR and HLR.</p>
+<hr />
+<h2 id="introduction-to-json">Introduction to JSON</h2>
+<p>JSON (JavaScript Object Notation) is a lightweight, text-based data interchange format that is easy for both humans to read and for machines to parse and generate. JSON is widely used for transmitting data between a server and a web application as it is language-independent and supported across various programming languages, including Java. JSON represents data as a collection of key-value pairs, where values can be strings, numbers, arrays, booleans, or even nested JSON objects. Its simplicity and readability make it ideal for structured data exchange in client-server architectures.</p>
+<p>Before we describe the specific JSON format for this assignment, let’s look at a simple JSON structure to understand its basic format and data types:</p>
+<pre class="json"><code>{
+  &quot;name&quot;: &quot;Alice&quot;,
+  &quot;age&quot;: 30,
+  &quot;isStudent&quot;: false,
+  &quot;skills&quot;: [&quot;Java&quot;, &quot;Python&quot;, &quot;JavaScript&quot;],
+  &quot;address&quot;: {
+    &quot;street&quot;: &quot;123 Main St&quot;,
+    &quot;city&quot;: &quot;Wonderland&quot;,
+    &quot;postalCode&quot;: &quot;W12345&quot;
+  }
+}</code></pre>
+<p>In this example, we have the following keys:</p>
+<ul>
+<li><code>name</code>: A string value (“Alice”).</li>
+<li><code>age</code>: A numeric value (30).</li>
+<li><code>isStudent</code>: A boolean value (false).</li>
+<li><code>skills</code>: An array of strings ([“Java”, “Python”, “JavaScript”]).</li>
+<li><code>address</code>: A nested JSON object with its own key-value pairs.</li>
+</ul>
+<p>This simple JSON format showcases how different types of data—strings, numbers, booleans, arrays, and nested objects—can be structured within JSON.</p>
+<p>There are several libraries that simplify interaction with data in JSON format. We will use the <code>Gson</code> library.</p>
+<p>For the example with Alice, we can set up a Java class to represent the structure of the data:</p>
+<pre class="java"><code>import java.util.List;
+
+class Person {
+    private String name;
+    private int age;
+    private boolean isStudent;
+    private List&lt;String&gt; skills;
+    private Address address;
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public int getAge() { return age; }
+    public void setAge(int age) { this.age = age; }
+
+    public boolean isStudent() { return isStudent; }
+    public void setStudent(boolean student) { isStudent = student; }
+
+    public List&lt;String&gt; getSkills() { return skills; }
+    public void setSkills(List&lt;String&gt; skills) { this.skills = skills; }
+
+    public Address getAddress() { return address; }
+    public void setAddress(Address address) { this.address = address; }
+}
+
+class Address {
+    private String street;
+    private String city;
+    private String postalCode;
+
+    // Getters and Setters
+    public String getStreet() { return street; }
+    public void setStreet(String street) { this.street = street; }
+
+    public String getCity() { return city; }
+    public void setCity(String city) { this.city = city; }
+
+    public String getPostalCode() { return postalCode; }
+    public void setPostalCode(String postalCode) { this.postalCode = postalCode; }
+}</code></pre>
+<p>Data in JSON format is, fundamentally, a string that needs to be parsed. <code>Gson</code> parses the data for us and allows us to interact with JSON data as well as constructing JSON strings.</p>
+<p>Here is an example using <code>Gson</code>:</p>
+<pre class="java"><code>import com.google.gson.Gson;
+
+public class GsonExample {
+    public static void main(String[] args) {
+        String json = &quot;&quot;&quot;
+        {
+          &quot;name&quot;: &quot;Alice&quot;,
+          &quot;age&quot;: 30,
+          &quot;isStudent&quot;: false,
+          &quot;skills&quot;: [&quot;Java&quot;, &quot;Python&quot;, &quot;JavaScript&quot;],
+          &quot;address&quot;: {
+            &quot;street&quot;: &quot;123 Main St&quot;,
+            &quot;city&quot;: &quot;Wonderland&quot;,
+            &quot;postalCode&quot;: &quot;W12345&quot;
+          }
+        }
+        &quot;&quot;&quot;;
+
+        // Create a Gson instance
+        Gson gson = new Gson();
+
+        // Parse JSON string into a Person object
+        Person person = gson.fromJson(json, Person.class);
+
+        // Access fields from the parsed object
+        System.out.println(&quot;Name: &quot; + person.getName());
+        System.out.println(&quot;Age: &quot; + person.getAge());
+        System.out.println(&quot;Is Student: &quot; + person.isStudent());
+        System.out.println(&quot;Skills: &quot; + person.getSkills());
+        System.out.println(&quot;Address:&quot;);
+        System.out.println(&quot;  Street: &quot; + person.getAddress().getStreet());
+        System.out.println(&quot;  City: &quot; + person.getAddress().getCity());
+        System.out.println(&quot;  Postal Code: &quot; + person.getAddress().getPostalCode());
+    }
+}</code></pre>
+<p>If we run <code>main</code> above then the output should be:</p>
+<pre class="bash"><code>Name: Alice
+Age: 30
+Is Student: false
+Skills: [Java, Python, JavaScript]
+Address:
+  Street: 123 Main St
+  City: Wonderland
+  Postal Code: W12345</code></pre>
+<p>What were the steps we used?</p>
+<ol type="1">
+<li><strong>Creating Classes</strong>: We created <code>Person</code> and <code>Address</code> classes to match the structure of the JSON. Each JSON field has a corresponding Java field with appropriate data types.</li>
+<li>Using <code>Gson</code> to Parse JSON: The <code>gson.fromJson</code> method converts the JSON string to a <code>Person</code> object. Gson automatically maps JSON fields to the corresponding fields in <code>Person</code> and <code>Address</code>. (It used a set of techniques that are generally bundled into the term <strong>reflection</strong>.)</li>
+<li><strong>Accessing Data</strong>: After parsing, we can access any field within the <code>Person</code> object, including nested fields like <code>address.city</code>.</li>
+</ol>
+<p>We can also convert a <code>Person</code> instance to a JSON string format:</p>
+<pre class="java"><code>String personJson = gson.toJson(person);
+System.out.println(personJson);</code></pre>
+<hr />
+<h2 id="json-structure-for-client-server-communication">JSON Structure for Client-Server Communication</h2>
+<p>In this assignment, we will use the a specific JSON format for the client and server to send messages to each other. The client will send requests with a specific structure and the server will respond with a specific structure.</p>
+<p><strong>Structure for Client Requests</strong></p>
+<p>The client will send a request that adheres to the following template:</p>
+<pre class="json"><code>{
+  &quot;requestId&quot;: &quot;unique_id_12345&quot;,
+  &quot;urls&quot;: [
+    &quot;http://example.com/doc1.txt&quot;,
+    &quot;http://example.com/doc2.txt&quot;
+  ]
+}</code></pre>
+<ul>
+<li><code>requestId</code>: A unique string identifier for the request.</li>
+<li><code>urls</code>: An array of URLs pointing to text documents.</li>
+</ul>
+<p><strong>Structure for Server Response</strong></p>
+<p>The server responds with a JSON object that includes the <code>requestId</code> and metrics for each document:</p>
+<pre class="json"><code>{
+  &quot;requestId&quot;: &quot;unique_id_12345&quot;,
+  &quot;metrics&quot;: {
+    &quot;http://example.com/doc1.txt&quot;: {
+      &quot;averageWordLength&quot;: 4.5,
+      &quot;uniqueWordRatio&quot;: 0.72,
+      &quot;hapaxLegomenaRatio&quot;: 0.25
+    },
+    &quot;http://example.com/doc2.txt&quot;: {
+      &quot;averageWordLength&quot;: 4.2,
+      &quot;uniqueWordRatio&quot;: 0.68,
+      &quot;hapaxLegomenaRatio&quot;: 0.18
+    }
+  }
+}</code></pre>
+<ul>
+<li><code>requestId</code>: The same ID provided in the client request for tracking purposes.</li>
+<li><code>metrics</code>: An object where each URL is a key, and its value is another JSON object containing:
+<ul>
+<li><code>averageWordLength</code>: The average length of words in the document.</li>
+<li><code>uniqueWordRatio</code>: The ratio of unique words to the total number of words.</li>
+<li><code>hapaxLegomenaRatio</code>: The ratio of words appearing exactly once to the total word count.</li>
+</ul></li>
+</ul>
+<hr />
+<blockquote>
+<h2 id="main-tasks">Main Tasks</h2>
+</blockquote>
+<blockquote>
+<p>For this assignment, the graded tasks are:</p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Computing the document-level metrics;</p>
+</blockquote></li>
+<li><blockquote>
+<p>Enabling parallel document processing;</p>
+</blockquote></li>
+<li><blockquote>
+<p>Modifying the server to handle multiple clients concurrently.</p>
+</blockquote></li>
+</ul>
+<blockquote>
+<p>You are provided most of the code for the client and the server, including the code that does the JSON processing. You should use the provided code as an example to learn from so that you can apply similar approaches in other assignments and projects.</p>
+</blockquote>
+<blockquote>
+<p>The primary computational task in this assignment will benefit from parallel processing because each client sends a request with multiple documents to process.</p>
+</blockquote>
+<blockquote>
+<p>You can use stream processing (especially parallel streams) or the ForkJoin framework to benefit from the inherent parallelism in the task. Sometimes these tasks are called <em>embarrassingly parallel</em> -- although we may not always see significant performance gains even when there is such parallelism because of system-level overheads.</p>
+</blockquote>
+<blockquote>
+<p>To approach this assignment, first focus on implementing the items marked with <code>TODO</code> in the code. All your work is going to be in <code>DocumentMetricsServer</code>.</p>
+</blockquote>
+<ol type="1">
+<li><blockquote>
+<p>Begin by implementing the computation of the three metrics. Each of these computations is encapsulated in a method that processes an array of <code>String</code>s.</p>
+</blockquote></li>
+</ol>
+<pre class="groovy"><code>    /**
+     * Calculates the average length of words in the given array of words.
+     *
+     * @param words an array of words in the document.
+     * @return the calculated average word length.
+     */
+    private static double computeAverageWordLength(String[] words) {
+        // TODO: implement this method
+        return 0.0;
+    }
+
+    /**
+     * Computes the ratio of unique words to the total word count.
+     *
+     * @param words      an array of words in the document.
+     * @return the unique word ratio.
+     */
+    private static double computeUniqueWordRatio(String[] words) {
+        // TODO: implement this method
+        return 0.0;
+    }
+
+    /**
+     * Computes the ratio of hapax legomena (words that appear exactly once) to the total word count.
+     *
+     * @param words      an array of words in the document.
+     * @return the hapax legomena ratio.
+     */
+    private static double computeHapaxLegomenaRatio(String[] words) {
+        // TODO: implement this method
+        return 0.0;
+    }</code></pre>
+<ol type="1">
+<li><blockquote>
+<p>You should then resolve the <code>TODO</code> in <code>respondToClient</code>. Prior to that point, a <code>List</code> with the URLs sent by a client has been extract from the JSON-formatted request. Now you can use methods such as <code>fetchContentFromURL</code> to obtain a <code>String</code> that represents a document and then call <code>computeMetrics</code>. <code>computeMetrics</code> splits a document into words and calls the individual <code>compute</code> methods you should have implemented in the previous step. Here is where you can process the documents sequentially or in parallel.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Finally, head to the <code>TODO</code> in <code>startService</code> and add support for a multithreaded server that will handle each client in a separate thread.</p>
+</blockquote></li>
+</ol>
+<blockquote>
+<p>For this assignment, spend some time reading the provided code.</p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>See how we can process JSON strings.</p>
+</blockquote></li>
+<li><blockquote>
+<p>See how we can stop servers [somewhat] gracefully. Pay attention to the use of <code>AtomicBoolean</code>.</p>
+</blockquote></li>
+<li><blockquote>
+<p>See how we can create test cases for multithreaded programs.</p>
+</blockquote></li>
+<li><blockquote>
+<p>See how we generate identifiers using Sqids. (The use here is not very good, but it is an example.)</p>
+</blockquote></li>
+</ul>
+<hr />
+<blockquote>
+<h2 id="testing-concurrent-programs">Testing Concurrent Programs</h2>
+</blockquote>
+<blockquote>
+<p>Testing concurrent programs is <strong>hard</strong>. The challenge of ensuring that concurrent programs are correct, relative to sequential programs, is that we now also need to reason about the numerous ways in which the concurrent threads of execution interleave with each other, and there are many such interleavings. We have to think carefully about the interleavings, and we also have to rely on the guarantees that properties such as immutability provide (because we know that such invariants hold across all interleavings).</p>
+</blockquote>
+<blockquote>
+<p>You have been provided with some example tests that create a server and a client, and that use multiple threads to interact with the server. The tests are examples to help you develop your own testing practices. In this assignment, you do not need to submit additional tests but you should think about how you will test other concurrent programs.</p>
+</blockquote>
+<hr />
+<h2 id="running-the-server-and-the-client-from-the-command-line">Running the Server and the Client from the Command Line</h2>
+<p>When we work with multiple programs that talk to each other, we benefit from being able to start each program from the command line, each in a separate terminal window, so that we can observe what each program does independently. (We should also use the debugger.)</p>
+<p>The <code>main</code> methods for the server and the client take arguments at the command line, and these arguments are contextualized using flags that start with <code>--</code>. For example, we want to start the multithreaded version of a server when we using the command line flag <code>--multithreaded true</code>. (Read the code to understand the different command line flags and how they are parsed.) Your implementation for the server should use the single-threaded or multithreaded version based on the flag we used as an example.</p>
+<p>The provided <code>build.gradle</code> file also defines Gradle tasks for starting the server and the client, and with different default arguments.</p>
+<p>Let us consider this example:</p>
+<pre class="groovy"><code>tasks.register(&#39;runServerSTSQ&#39;, JavaExec) {
+    mainClass = &#39;documentmetrics.server.DocumentMetricsServer&#39;
+    classpath = sourceSets.main.runtimeClasspath
+    args = [&#39;--port&#39;, &#39;8084&#39;, &#39;--multithreaded&#39;, &#39;false&#39;, &#39;--parallelism&#39;, &#39;false&#39;]
+}</code></pre>
+<p>We are defining the Gradle task <code>runServerSTSQ</code> that runs the server with the specified flags. We would invoke this Gradle task at the command line as:</p>
+<pre class="groovy"><code>gradle runServerSTSQ</code></pre>
+<p>This is similar to the following (assuming you are in the correct working directory):</p>
+<pre class="groovy"><code>java documentmetrics.server.DocumentMetricsServer --port 8084 --multithreaded false --parallelism false</code></pre>
+<p>In your IDE, in the Gradle pane or view, you should see all the tasks that have been registered using the <code>build.gradle</code> file, and you can invoke the tasks from there too.</p>
+<blockquote>
+<p>Read the provided code for the server and the client with some care so that you can identify some useful idioms. Also examine the <code>build.gradle</code> file so that you know a bit more about configuring your Gradle-based build process.</p>
+</blockquote>
+<hr />
+<blockquote>
+<p>The remaining tasks in the assignment do <strong>not</strong> involve any submission but you will learn what software containers are and you will learn how you can get started with Docker, which is a popular tool for software containerization.</p>
+</blockquote>
+<hr />
+<h2 id="containers-and-docker">Containers and Docker</h2>
+<blockquote>
+<p><strong>What are Containers?</strong></p>
+</blockquote>
+<blockquote>
+<p>Containers are lightweight, portable, and self-contained environments that package an application along with all its dependencies, libraries, and configuration files. Unlike virtual machines, which include an entire operating system, containers share the host system’s OS kernel but isolate applications in separate environments. This makes containers significantly more efficient in terms of resource usage and startup time compared to traditional virtual machines.</p>
+</blockquote>
+<blockquote>
+<p>Containers allow developers to build applications that can run consistently across different environments. Once a containerized application is built, it can be deployed and run on any system with a compatible container runtime, regardless of the underlying OS and software configuration. This makes containers ideal for microservices, distributed applications, and any project where consistency and scalability across different environments are essential.</p>
+</blockquote>
+<p><strong>What is Docker?</strong></p>
+<p>Docker is an open-source platform that automates the creation, deployment, and management of containers. It provides tools and a runtime environment to package applications into containers and ensures that these containers run reliably across various computing environments. Docker simplifies working with containers through its:</p>
+<ul>
+<li>Docker Engine: The core runtime that manages container creation and execution.</li>
+<li>Docker CLI: A command-line interface to build, run, and manage containers.</li>
+<li>Docker Hub: A cloud-based registry where users can share and download prebuilt Docker images.</li>
+</ul>
+<p>With Docker, you can create a Docker image (a blueprint for creating containers) that includes your application code, dependencies, libraries, and environment configurations. Once the image is created, you can run multiple instances of it as containers on any Docker-enabled system, ensuring that your application runs the same way in development, testing, and production.</p>
+<p>A <strong>Docker image</strong> is a snapshot of an application and its environment, defining what will be run in a container. An image is built from a <code>Dockerfile</code>, a script with instructions on how to set up the environment for the application.</p>
+<p>A <strong>Docker container</strong> is a runtime instance of a Docker image. Containers are isolated and have their own filesystem, networking, and process space, even though they share the host OS kernel.</p>
+<p>A <strong><code>Dockerfile</code></strong> is a text file containing instructions to assemble a Docker image. It specifies steps like setting up the base OS, installing dependencies, copying application files, and defining the command to run the application.</p>
+<p><strong>Docker Hub</strong>, like GitHub, is a repository service provided by Docker where users can store and share images, making it easy to distribute containerized applications.</p>
+<figure class="lab-figure"><img src="../../assets/images/2025/docker-build-and-run.png" alt="A Dockerfile is built into a Docker image, which is then run as a Docker container." loading="lazy"><figcaption>A Dockerfile is built into a Docker image, which is then run as a Docker container.</figcaption></figure>
+
+<p>There is much to learn about Docker but we will provide a short starting point.</p>
+<hr />
+<h2 id="creating-a-docker-image-and-container-for-the-server-and-the-client">Creating a Docker Image and Container for the Server and the Client</h2>
+<p>Suppose we want to make it easy for others to run our server and client, we can create Docker images for these applications.</p>
+<p>To create Docker images for both the server and client in this assignment, you’ll need to write two separate <code>Dockerfile</code>s—one for the server and one for the client. Each Dockerfile will define the specific environment, dependencies, and entry point for running each application.</p>
+<blockquote>
+<p>Before you complete the remaining steps (which you should do if you want to understand what Docker is all about), you should install Docker first. Then continue.</p>
+</blockquote>
+<p><strong>Setting up</strong> <code>Dockerfile</code><strong>s</strong></p>
+<p>We could structure our source code directories in different ways to create Docker images. One approach is the following directory structure that separates the server and the client:</p>
+<pre class="groovy"><code>project-root/
+├── client/
+│   ├── Dockerfile        # Dockerfile for the client
+│   └── build.gradle      # Gradle build file for client
+├── server/
+│   ├── Dockerfile        # Dockerfile for the server
+│   └── build.gradle      # Gradle build file for server
+└── shared/
+    ├── src/              # Source code shared by both client and server (if any)
+    └── build.gradle      # Main Gradle file for the project</code></pre>
+<p>We have a different structure for our codebase at this point, because the server and the client are in the same <code>src</code> directory. We will, therefore, use different names for the two <code>Dockerfile</code>s and that will give us this structure:</p>
+<pre class="groovy"><code>project-root/
+├── Dockerfile.server      # Dockerfile for the server
+├── Dockerfile.client      # Dockerfile for the client
+├── build.gradle           # Gradle build file for the whole project
+├── src/                   # Source code for both client and server
+│   ├── main/
+│   │   ├── java/
+│   │   │   ├── documentmetrics/server/DocumentMetricsServer.java
+│   │   │   └── documentmetrics/client/DocumentMetricsClient.java</code></pre>
+<p>The <code>Dockerfile.server</code> will look like this:</p>
+<pre class="groovy"><code># Use the official OpenJDK image as a base
+FROM openjdk:17-jdk-slim
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the build files to the container
+COPY . /app
+
+# Build the server JAR file
+RUN gradle serverJar -x test
+
+# Expose the server port (replace with the actual port number)
+# Because Docker emulates the OS, we need to allow network connections
+EXPOSE 8087
+
+# Set the default command to run the server JAR
+CMD [&quot;java&quot;, &quot;-jar&quot;, &quot;build/libs/DocumentMetricsServer-1.0.jar&quot;, &quot;--port&quot;, &quot;8087&quot;, &quot;--parallelism&quot;, &quot;true&quot;]</code></pre>
+<p>Let us understand the components of the <code>Dockerfile</code>:</p>
+<ul>
+<li>Base Image: We start with <code>openjdk:17-jdk-slim</code> as it provides a lightweight Java environment.</li>
+<li>Working Directory: Set to <code>/app</code> in the container where all subsequent commands will execute. We are telling Docker that there should be a directory <code>/app</code> where our application should be placed.</li>
+<li>Copy Files: The <code>COPY</code> command copies all files from the current directory (including source and Gradle files) into the container.</li>
+<li>Build JAR: The <code>RUN</code> command uses Gradle to build the JAR file for the server using the <code>serverJar</code> task that is defined in <code>build.gradle</code> . The server JAR is placed in the <code>build/libs</code> directory.</li>
+<li>Expose Port: Specify the port that the server will listen on (in this case, 8087).</li>
+<li>Run Command: The <code>CMD</code> command specifies the default command to run the server JAR when the container starts.</li>
+</ul>
+<p>The <code>Dockerfile.client</code> will look like this:</p>
+<pre class="groovy"><code># Use the official OpenJDK image as a base
+FROM openjdk:17-jdk-slim
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the build files to the container
+COPY . /app
+
+# Build the client JAR file
+RUN gradle clientJar -x test
+
+# Specify the default command to run the client JAR
+CMD [&quot;java&quot;, &quot;-jar&quot;, &quot;build/libs/DocumentMetricsClient-1.0.jar&quot;, &quot;--server&quot;, &quot;localhost&quot;, &quot;--port&quot;, &quot;8087&quot;]</code></pre>
+<p>Since the client does not need to expose any ports (it only initiates requests to the server), we skip the <code>EXPOSE</code> command.</p>
+<p><strong>Building the Docker Images</strong></p>
+<p>When both Dockerfiles are in the same directory, you need to specify the Dockerfile to use when building each image. Here’s how you can build the images:</p>
+<pre class="groovy"><code># Build the server image using Dockerfile.server
+docker build -f Dockerfile.server -t document-metrics-server .
+
+# Build the client image using Dockerfile.client
+docker build -f Dockerfile.client -t document-metrics-client .</code></pre>
+<p><strong>Running the Docker Containers</strong></p>
+<ol type="1">
+<li>Create a Docker network</li>
+</ol>
+<pre class="groovy"><code>docker network create document-metrics-network</code></pre>
+<p>This step is optional. You should do this if running both containers locally and you need them to communicate by name.</p>
+<ol type="1">
+<li>Run the Server container</li>
+</ol>
+<pre class="groovy"><code>docker run --network=document-metrics-network -p 8087:8087 --name document-metrics-server document-metrics-server</code></pre>
+<p>This command maps port 8087 on your local machine to port 8087 in the container, making the server accessible at <code>http://localhost:8087</code>.</p>
+<ol start="3" type="1">
+<li>Run the Client Container</li>
+</ol>
+<pre class="groovy"><code>docker run --network=document-metrics-network document-metrics-client --server document-metrics-server --port 8087 --urls /path/to/urls.txt</code></pre>
+<p><strong>Passing Arguments in Docker</strong></p>
+<p>When running a JAR in a Docker container, you can pass arguments by specifying them after the java -jar command in the <code>CMD</code> instruction in the <code>Dockerfile</code> or when running the container.</p>
+<p>Option 1: In the <code>Dockerfile</code></p>
+<pre class="groovy"><code>CMD [&quot;java&quot;, &quot;-jar&quot;, &quot;DocumentMetricsClient.jar&quot;, &quot;--server&quot;, &quot;localhost&quot;, &quot;--port&quot;, &quot;8087&quot;, &quot;--urls&quot;, &quot;urls.txt&quot;]</code></pre>
+<p>Option 2: Overriding Arguments at Runtime</p>
+<pre class="groovy"><code>docker run document-metrics-client --server localhost --port 8087 --urls urls.txt</code></pre>
+<hr />
+<blockquote>
+<h2 id="summary">Summary</h2>
+</blockquote>
+<blockquote>
+<p>If you completed this assignment, you would have developed and deployed a client-server application and gained experience with network programming, concurrent execution, and JSON data processing. You would have also gained some insights into testing concurrent programs.</p>
+</blockquote>
+<blockquote>
+<p>If you invested time in all aspects of the assignment then you would have understood much more about using Gradle and also software containers. By leveraging tools like Docker, you can ensure that both the client and server applications can run consistently across different environments, highlighting the portability and scalability that containers provide in modern software development.</p>
+</blockquote>
+<blockquote>
+<p>This assignment should have provided a short journey through building, testing, and deploying a client-server system, reinforcing skills that are crucial in software development, cloud computing, and DevOps workflows.</p>
+</blockquote>
+<hr />
+<h2 id="grading">Grading</h2>
+<p>You should submit your work by pushing your code to GitHub. There is no submission on PrairieLearn.</p>
+<table>
+<thead>
+<tr>
+<th><strong>Achievement</strong></th>
+<th><strong>Grade</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Computing Document Metrics</td>
+<td>3 / 9</td>
+</tr>
+<tr>
+<td>Parallel Processing of Requests from One Client</td>
+<td>3 / 9</td>
+</tr>
+<tr>
+<td>Serving Multiple Clients Concurrently</td>
+<td>3 / 9</td>
+</tr>
+</tbody>
+</table>

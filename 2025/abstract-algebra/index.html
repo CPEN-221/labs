@@ -1,0 +1,463 @@
+---
+layout: default
+title: "Lab 4: Abstract Algebra"
+description: "Implement and test operations that determine whether a finite table defines a group."
+hero_title: "Lab 4: Abstract Algebra"
+eyebrow: "CPEN 221A · 2025 lab archive"
+term: "2025 archive"
+page_kind: "lab"
+lab_number: "4"
+permalink: "/2025/abstract-algebra/"
+source_file: "Lab 4: Abstract Algebra.md"
+source_sha256: "2ef81cd28af2eb8ca4c5f56762a89824008521d0ec88f9cc40ce18f57b82ca36"
+mobile_toc_label: "Jump to a lab section"
+previous_slug: "dna-cut-and-splice"
+next_slug: "adts-and-job-manager"
+sections:
+  - id: "overview"
+    title: "Overview"
+  - id: "background"
+    title: "Background"
+  - id: "your-tasks"
+    title: "Your Tasks"
+  - id: "grading"
+    title: "Grading"
+  - id: "some-tests"
+    title: "Some Tests"
+---
+
+<aside class="archive-note" aria-label="Archive status">
+  <strong>Archived activity.</strong> This page preserves the 2025 lab.
+  Submission instructions, starter repositories, and external links may have changed.
+</aside>
+
+<h2 id="overview">Overview</h2>
+<p>If you are given a set of elements (in this programming assignment, you will work with <code>String</code>s) and an operation defined on pairs of elements in the set (you are explicitly given the mapping from a pair of operands to the output of the operation), can you determine some properties of this set and operation? Can you determine if what is provided satisfies the conditions for being an algebraic group?</p>
+<hr />
+<h2 id="background">Background</h2>
+<p>A <strong>group</strong> is an algebraic entity with a set <code>G</code> and a binary operation (an operation that involves two elements from the set), often denoted <code>*</code>, that satisfies the following conditions:</p>
+<ol type="1">
+<li>There exists an <code>e</code> in the set G, such that <code>a * e = a</code> and <code>e * a = a</code>, for all elements <code>a</code> in <code>G</code>. Such an element <code>e</code> is called the <strong>identity</strong> of the group.</li>
+<li>For all <code>a</code> in <code>G</code>, there exists some <code>a'</code> in <code>G</code>, such that <code>a * a' = e</code> and <code>a' * a = e</code>. In this case, <code>a'</code> is the <strong>inverse</strong> of <code>a</code> and <code>a</code> is the <strong>inverse</strong> of <code>a'</code>.</li>
+<li>For all <code>a</code> and <code>b</code> and <code>c</code> in <code>G</code>, <code>a * (b * c) = (a * b) * c</code>. This means <code>*</code> is <strong>associative</strong>.</li>
+<li>For all elements <code>a</code> and <code>b</code> in <code>G</code>, <code>a * b</code> is in <code>G</code>. This means <code>G</code> is <strong>closed</strong> under the operation <code>*</code>.</li>
+</ol>
+<p>Additionally we will say a group <code>G</code> is <strong>commutative</strong> if for all elements <code>a</code> and <code>b</code> in <code>G</code>, <code>a * b = b * a</code> and <code>a * b</code> is also an element in <code>G</code>.</p>
+<p>We define the n-th <strong>power</strong> of some element <code>a</code> in <code>G</code> to be <code>a^n</code> where <code>n</code> is a positive integer and <code>a^(n+1)</code> is defined recursively as follows:</p>
+<ul>
+<li><code>a^(n+1) = a * a^n</code></li>
+<li><code>a^1 = a</code></li>
+</ul>
+<p>We also define the <strong>order</strong> of an element <code>a</code> in <code>G</code> to be the smallest possible positive integer <code>m</code> such that <code>a^m = e</code>, where <code>e</code> is the <strong>identity</strong> of the group. Note that <strong>order</strong> is only well defined in a group.</p>
+<hr />
+<h4 id="example">Example</h4>
+<p>Let <code>G = { x1, x2, x3 }</code> and <code>*</code> to be defined by the operation table below. Does this set and operation pair represent a group? Is the operation <strong>commutative</strong>? What is the <strong>order</strong> of <code>x1</code>?</p>
+<table>
+<thead>
+<tr>
+<th><strong><code>*</code></strong></th>
+<th><strong><code>x1</code></strong></th>
+<th><strong><code>x2</code></strong></th>
+<th><strong><code>x3</code></strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>x1</code></td>
+<td><code>x2</code></td>
+<td><code>x3</code></td>
+<td><code>x1</code></td>
+</tr>
+<tr>
+<td><code>x2</code></td>
+<td><code>x3</code></td>
+<td><code>x1</code></td>
+<td><code>x2</code></td>
+</tr>
+<tr>
+<td><code>x3</code></td>
+<td><code>x1</code></td>
+<td><code>x2</code></td>
+<td><code>x3</code></td>
+</tr>
+</tbody>
+</table>
+<p>The table above (which is like a <em>multiplication table</em>, except that the <code>x</code> values need not be integers and the operation need not be multiplication) can be rewritten using the pair of operands (inputs to the operation) and the output:</p>
+<table>
+<thead>
+<tr>
+<th><strong><code>xi</code>, <code>xj</code></strong></th>
+<th><strong><code>xi * xj</code></strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>operand pair</strong></td>
+<td><strong>output</strong></td>
+</tr>
+<tr>
+<td><code>x1</code>, <code>x1</code></td>
+<td><code>x2</code></td>
+</tr>
+<tr>
+<td><code>x1</code>, <code>x2</code></td>
+<td><code>x3</code></td>
+</tr>
+<tr>
+<td><code>x1</code>, <code>x3</code></td>
+<td><code>x1</code></td>
+</tr>
+<tr>
+<td><code>x2</code>, <code>x1</code></td>
+<td><code>x3</code></td>
+</tr>
+<tr>
+<td><code>x2</code>, <code>x2</code></td>
+<td><code>x1</code></td>
+</tr>
+<tr>
+<td><code>x2</code>, <code>x3</code></td>
+<td><code>x2</code></td>
+</tr>
+<tr>
+<td><code>x3</code>, <code>x1</code></td>
+<td><code>x1</code></td>
+</tr>
+<tr>
+<td><code>x3</code>, <code>x2</code></td>
+<td><code>x2</code></td>
+</tr>
+<tr>
+<td><code>x3</code>, <code>x3</code></td>
+<td><code>x3</code></td>
+</tr>
+</tbody>
+</table>
+<p>To answer the questions posed at the start of this example, we need to check and see if <code>G</code> and <code>*</code> satisfy the four conditions we mention in the beginning.</p>
+<ol type="1">
+<li>A quick search allows us to see that <code>x3</code> is the <strong>identity</strong> of the group, so <code>e = x3</code> as</li>
+</ol>
+<pre class="other"><code>x1 * x3 = x3 * x1 = x1
+x2 * x3 = x3 * x2 = x2
+x3 * x3 = x3</code></pre>
+<ol start="2" type="1">
+<li>All elements of <code>G</code> have their <strong>inverse</strong> as an element of <strong>G</strong>. We know <code>x3</code> is the <strong>identity</strong>, and so for any <code>xi</code>, the <strong>inverse</strong> of <code>xi</code> is some <code>xj</code> such that <code>xi * xj = xj * xi = x3</code>. In our example we see</li>
+</ol>
+<pre class="other"><code>x1 * x2 = x2 * x1 = x3 = e
+x2 * x1 = x1 * x2 = x3 = e
+x3 * x3 = x3 = e</code></pre>
+<ol start="3" type="1">
+<li>The operation is <strong>associative</strong> as <code>xi * (xj * xk) = (xi * xj) * xk</code> for all <code>xi, xj, xk</code> in <code>G</code>. Let us confirm this through the following example:</li>
+</ol>
+<pre class="other"><code>x1 * (x2 * x3) = x1 * x2 = x3
+(x1 * x2) * x3 = x3 * x3 = x3
+=&gt; x1 * (x2 * x3) = (x1 * x2) * x3</code></pre>
+<ol start="4" type="1">
+<li>For each possible pair <code>xi, xj</code> in <code>G</code>, we see that <code>xi * xj</code> is also in <code>G</code>. We know this to be true as all entries in the operation table are elements in <code>G</code>.</li>
+</ol>
+<p>We see that all four conditions of a group hold, therefore <code>G</code> and <code>*</code> are indeed a group.</p>
+<p>The operation is <strong>commutative</strong> as <code>xi * xj = xj * xi</code> for any <code>xi, xj</code>. We know this to be true as the product table is <a href="https://en.wikipedia.org/wiki/Symmetricmatrix">symmetric</a>.</p>
+<p>The <strong>order</strong> of <code>x1</code> is <strong>3</strong> as</p>
+<p><code>x1^3 = x1 * x1^2 = x1 * (x1 * x1) = x1 * x2 = x3 = e</code></p>
+<p>and <strong>3</strong> is the smallest possible positive integer such that <code>x1^3 = e</code>.</p>
+<hr />
+<blockquote>
+<h2 id="your-tasks">Your Tasks</h2>
+</blockquote>
+<blockquote>
+<p>You have to implement the <code>ProbableGroup</code> type that is created using a set of elements and an operation on pairs of elements (this operation is described explicitly using a table that maps a pair of values to the output value). In Java vocabulary, the <code>ProbableGroup</code> class has a constructor <code>public ProbableGroup(Set&lt;String&gt; elements, Map&lt;Pair&lt;String&gt;, String) opTable)</code>.</p>
+</blockquote>
+<blockquote>
+<p>Relating to the <strong>background</strong> section, <code>elements</code> is our set <code>G</code> and <code>opTable</code> is our operation table. <code>opTable</code> is initialized such that <code>opTable.get(new Pair("x1","x2"))</code> returns the result of the operation <code>x1 * x2</code>, and <code>x1</code>, <code>x2</code> are included in <code>elements</code>.</p>
+</blockquote>
+<blockquote>
+<p>You need to implement the constructor and complete the following methods:</p>
+</blockquote>
+<ol type="1">
+<li><blockquote>
+<p><code>String product(String a, String b)</code>: returns as <code>a * b</code>.</p>
+</blockquote></li>
+<li><blockquote>
+<p><code>String power(String a, int n)</code>: returns <code>a^n</code>.</p>
+</blockquote></li>
+<li><blockquote>
+<p><code>String getIdentity()</code>: returns the identity element of the group.</p>
+</blockquote></li>
+<li><blockquote>
+<p><code>int getOrder(String a)</code>: returns the order of the element <code>a</code>.</p>
+</blockquote></li>
+<li><blockquote>
+<p><code>String getInverse(String a)</code>: returns the inverse of the element <code>a</code>.</p>
+</blockquote></li>
+<li><blockquote>
+<p><code>boolean isGroup()</code>: Does this <code>ProbableGroup</code> instance satisfy all the conditions of a group as defined in the <strong>background</strong> section?</p>
+</blockquote></li>
+<li><blockquote>
+<p><code>boolean isCommutative()</code>: Is the <code>*</code> operation commutative?</p>
+</blockquote></li>
+<li><blockquote>
+<p>Make <code>ProbableGroup</code> an <strong>immutable</strong> type without removing any methods.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Implement the method <code>boolean isSubGroup(Set&lt;String&gt; h)</code> that returns <code>true</code> if and only if elements in <code>h</code> are a <strong>subgroup</strong> of <code>this</code>.</p>
+</blockquote></li>
+</ol>
+<hr />
+<p>Formally, a non-empty subset <code>S</code> of a group <code>G</code> is a <strong>subgroup</strong> of <code>G</code> if:</p>
+<ol type="1">
+<li>For every element <code>s</code> in <code>S</code>, <code>s'</code> (the <strong>inverse</strong> of <code>s</code>) is also in <code>S</code>;</li>
+<li>For every two elements <code>s</code> and <code>t</code> in <code>S</code>, <code>s * t</code> is also in <code>S</code>.</li>
+</ol>
+<p>For instance <code>S = {x3}</code> is a subgroup of <code>G</code> as defined in our original example.</p>
+<p>More detailed specs provided in the skeleton code and we <em>recommend</em> that you implement methods in the provided order. You can assume any constraint stated under <code>@param</code> or <code>requires</code> in the specs is always satisfied. (You do not need to worry about violations of the preconditions.)</p>
+<p>You need to think about how to test your work. Some simple tests are shown at the end of this page.</p>
+<hr />
+<blockquote>
+<h2 id="grading">Grading</h2>
+</blockquote>
+<blockquote>
+<p>You will answer some questions on PrairieLearn and you will submit your implementation that fixes the bugs in the provided code.</p>
+</blockquote>
+<blockquote>
+<p>You should submit your code on PrairieLearn and via git to GitHub. If you submit your code correctly to GitHub and it matches your PrarieLearn submission then the grade on PrairieLearn for this lab will be unchanged. If you do not submit your work to GitHub correctly then your grade will be lowered by 2 points (the equivalent of a letter grade reduction).</p>
+</blockquote>
+<blockquote>
+<p>This programming task is worth 6 points and the other questions on PrairieLearn are worth 3 points.</p>
+</blockquote>
+<hr />
+<h2 id="some-tests">Some Tests</h2>
+<pre class="java"><code>public class GroupTests {
+    /*
+     * This method creates a group with the following product table.
+     *         x1    x2    x3
+     *       -----------------
+     *    x1 | x2    x3    x1
+     *       |
+     *    x2 | x3    x1    x2
+     *       |
+     *    x3 | x1    x2    x3
+     * */
+    private ProbableGroup makeGp1() {
+        Set&lt;String&gt; elts = new HashSet&lt;String&gt;();
+        elts.add(&quot;x1&quot;);
+        elts.add(&quot;x2&quot;);
+        elts.add(&quot;x3&quot;);
+
+        Map&lt;Pair&lt;String&gt;, String&gt; productMap = new HashMap&lt;Pair&lt;String&gt;, String&gt;();
+
+        productMap.put(new Pair&lt;String&gt;(&quot;x1&quot;, &quot;x1&quot;), &quot;x2&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;x1&quot;, &quot;x2&quot;), &quot;x3&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;x1&quot;, &quot;x3&quot;), &quot;x1&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;x2&quot;, &quot;x1&quot;), &quot;x3&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;x2&quot;, &quot;x2&quot;), &quot;x1&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;x2&quot;, &quot;x3&quot;), &quot;x2&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;x3&quot;, &quot;x1&quot;), &quot;x1&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;x3&quot;, &quot;x2&quot;), &quot;x2&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;x3&quot;, &quot;x3&quot;), &quot;x3&quot;);
+
+        ProbableGroup gp1 = new ProbableGroup(elts, productMap);
+        return gp1;
+    }
+
+    /*
+     * This method creates a group with the following product table.
+     *
+     *        a   b
+     *       -------
+     *    a | a   b
+     *      |
+     *    b | a   a
+     * */
+    private ProbableGroup makeGp2() {
+
+        Set&lt;String&gt; elts = new HashSet&lt;String&gt;();
+        elts.add(&quot;a&quot;);
+        elts.add(&quot;b&quot;);
+
+        Map&lt;Pair&lt;String&gt;, String&gt; productMap = new HashMap&lt;Pair&lt;String&gt;, String&gt;();
+
+        productMap.put(new Pair&lt;String&gt;(&quot;a&quot;, &quot;a&quot;), &quot;a&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;a&quot;, &quot;b&quot;), &quot;b&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;b&quot;, &quot;a&quot;), &quot;a&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;b&quot;, &quot;b&quot;), &quot;a&quot;);
+
+        ProbableGroup gp2 = new ProbableGroup(elts, productMap);
+        return gp2;
+    }
+
+    /*
+     * This method creates a group with the following product table.
+     *         x1    x2    x3    x4
+     *       -----------------------
+     *    x1 | x1    x2    x3    x4
+     *       |
+     *    x2 | x2    x3    x4    x1
+     *       |
+     *    x3 | x3    x4    x1    x2
+     *       |
+     *    x4 | x4    x1    x2    x3
+     * */
+    private ProbableGroup makeGp3() {
+
+        Set&lt;String&gt; elts = new HashSet&lt;String&gt;();
+        elts.add(&quot;x1&quot;);
+        elts.add(&quot;x2&quot;);
+        elts.add(&quot;x3&quot;);
+        elts.add(&quot;x4&quot;);
+
+        Map&lt;Pair&lt;String&gt;, String&gt; productMap = new HashMap&lt;Pair&lt;String&gt;, String&gt;();
+
+        productMap.put(new Pair&lt;String&gt;(&quot;x1&quot;, &quot;x1&quot;), &quot;x1&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;x1&quot;, &quot;x2&quot;), &quot;x2&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;x1&quot;, &quot;x3&quot;), &quot;x3&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;x1&quot;, &quot;x4&quot;), &quot;x4&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;x2&quot;, &quot;x1&quot;), &quot;x2&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;x2&quot;, &quot;x2&quot;), &quot;x3&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;x2&quot;, &quot;x3&quot;), &quot;x4&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;x2&quot;, &quot;x4&quot;), &quot;x1&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;x3&quot;, &quot;x1&quot;), &quot;x3&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;x3&quot;, &quot;x2&quot;), &quot;x4&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;x3&quot;, &quot;x3&quot;), &quot;x1&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;x3&quot;, &quot;x4&quot;), &quot;x2&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;x4&quot;, &quot;x1&quot;), &quot;x4&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;x4&quot;, &quot;x2&quot;), &quot;x1&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;x4&quot;, &quot;x3&quot;), &quot;x2&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;x4&quot;, &quot;x4&quot;), &quot;x3&quot;);
+
+        ProbableGroup gp3 = new ProbableGroup(elts, productMap);
+        return gp3;
+    }
+
+    /*
+     * This method creates a group with the following product table.
+     *
+     *        a   b
+     *       -------
+     *    a | a   b
+     *      |
+     *    b | b   b
+     * */
+    private ProbableGroup makeGp4() {
+
+        Set&lt;String&gt; elts = new HashSet&lt;String&gt;();
+        elts.add(&quot;a&quot;);
+        elts.add(&quot;b&quot;);
+
+        Map&lt;Pair&lt;String&gt;, String&gt; productMap = new HashMap&lt;Pair&lt;String&gt;, String&gt;();
+
+        productMap.put(new Pair&lt;String&gt;(&quot;a&quot;, &quot;a&quot;), &quot;a&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;a&quot;, &quot;b&quot;), &quot;b&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;b&quot;, &quot;a&quot;), &quot;b&quot;);
+        productMap.put(new Pair&lt;String&gt;(&quot;b&quot;, &quot;b&quot;), &quot;b&quot;);
+
+        ProbableGroup gp4 = new ProbableGroup(elts, productMap);
+        return gp4;
+    }
+
+    @Test
+    public void testProduct1() {
+        ProbableGroup gp1 = makeGp1();
+        assertEquals(&quot;x3&quot;, gp1.product(&quot;x1&quot;, &quot;x2&quot;));
+    }
+
+    @Test
+    public void testProduct2() {
+        ProbableGroup gp1 = makeGp1();
+        assertEquals(&quot;x2&quot;, gp1.product(&quot;x3&quot;, &quot;x2&quot;));
+    }
+
+    @Test
+    public void testProduct3() {
+        ProbableGroup gp2 = makeGp2();
+        assertEquals(&quot;b&quot;, gp2.product(&quot;a&quot;, &quot;b&quot;));
+    }
+
+    @Test
+    public void testIdentity1() {
+        ProbableGroup gp1 = makeGp1();
+        assertEquals(&quot;x3&quot;, gp1.getIdentity());
+    }
+
+    @Test
+    public void testIdentity2() {
+        ProbableGroup gp2 = makeGp2();
+        assertEquals(&quot;&quot;, gp2.getIdentity());
+    }
+
+    @Test
+    public void testInverse1() {
+        ProbableGroup gp2 = makeGp2();
+        assertEquals(&quot;&quot;, gp2.getInverse(&quot;b&quot;));
+    }
+
+    @Test
+    public void testInverse2() {
+        ProbableGroup gp3 = makeGp3();
+        assertEquals(&quot;x4&quot;, gp3.getInverse(&quot;x2&quot;));
+    }
+
+    @Test
+    public void testPower1() {
+        ProbableGroup gp1 = makeGp1();
+        assertEquals(&quot;x2&quot;, gp1.power(&quot;x1&quot;, 5));
+    }
+
+    @Test
+    public void testPower2() {
+        ProbableGroup gp2 = makeGp2();
+        assertEquals(&quot;a&quot;, gp2.power(&quot;b&quot;, 10));
+    }
+
+    @Test
+    public void testOrder1() {
+        ProbableGroup gp1 = makeGp1();
+        assertEquals(1, gp1.order(&quot;x3&quot;));
+    }
+
+    @Test
+    public void testOrder2() {
+        ProbableGroup gp3 = makeGp3();
+        assertEquals(4, gp3.order(&quot;x2&quot;));
+    }
+
+    @Test
+    public void testIsGroup1() {
+        ProbableGroup gp1 = makeGp1();
+        assertTrue(gp1.isGroup());
+    }
+
+    @Test
+    public void testIsGroup2() {
+        ProbableGroup gp3 = makeGp3();
+        assertTrue(gp3.isGroup());
+    }
+
+    @Test
+    public void testIsGroup3() {
+        ProbableGroup gp2 = makeGp2();
+        assertFalse(gp2.isGroup());
+    }
+
+    @Test
+    public void testIsCommutative1() {
+        ProbableGroup gp1 = makeGp1();
+        assertTrue(gp1.isCommutative());
+    }
+
+    @Test
+    public void testIsCommutative2() {
+        ProbableGroup gp2 = makeGp2();
+        assertFalse(gp2.isCommutative());
+    }
+
+    @Test
+    public void testSubGroup(){
+        ProbableGroup gp1 = makeGp1();
+        Set&lt;String&gt; subGp1 = new HashSet&lt;&gt;();
+        subGp1.add(&quot;x3&quot;);
+        Set&lt;String&gt; subGp2 = new HashSet&lt;&gt;();
+        subGp2.add(&quot;x1&quot;);
+        assertFalse(gp1.isSubgroup(subGp2));
+        assertTrue(gp1.power(&quot;x3&quot;, 1).equals(&quot;x3&quot;));
+    }
+}</code></pre>

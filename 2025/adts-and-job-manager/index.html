@@ -1,0 +1,101 @@
+---
+layout: default
+title: "Lab 5: ADTs and the JobManager"
+description: "Design and implement an abstract data type for assigning jobs to robots."
+hero_title: "Lab 5: ADTs and the JobManager"
+eyebrow: "CPEN 221A · 2025 lab archive"
+term: "2025 archive"
+page_kind: "lab"
+lab_number: "5"
+permalink: "/2025/adts-and-job-manager/"
+source_file: "Lab 5: ADTs (The JobManager) .md"
+source_sha256: "bea7d763c5d971671f1d44e110b58c4a6faeba40613debc5281f2334ae6f99fa"
+mobile_toc_label: "Jump to a lab section"
+previous_slug: "abstract-algebra"
+next_slug: "representation-invariants-and-job-manager"
+sections:
+  - id: "overview"
+    title: "Overview"
+  - id: "operations"
+    title: "Operations"
+  - id: "your-task"
+    title: "Your Task"
+  - id: "grading"
+    title: "Grading"
+---
+
+<aside class="archive-note" aria-label="Archive status">
+  <strong>Archived activity.</strong> This page preserves the 2025 lab.
+  Submission instructions, starter repositories, and external links may have changed.
+</aside>
+
+<h2 id="overview">Overview</h2>
+<p>This lab activity focuses on the design and implementation of an abstract data type (ADT) that we shall call <code>JobManager</code>. A <code>JobManager</code> is responsible to managing a set of jobs, which are identified by integer IDs from <code>1</code> to <code>n</code>. A <code>JobManager</code> also maintains a set of <code>Robot</code> objects that are responsible for completing these jobs. The <code>JobManager</code> ADT's operations enable its user to manage the set of <code>Robots</code> and the assignment of jobs to those<code>Robots</code>.</p>
+<hr />
+<blockquote>
+<h2 id="operations">Operations</h2>
+</blockquote>
+<blockquote>
+<p>A <code>JobManager</code> is seeded with <code>n</code> (the number of jobs it is managing). Each of these <code>n</code> jobs are initially “unassigned” (i.e., not assigned to a robot). One can then add <code>Robots</code>, assign jobs to the <code>Robots</code>, and move jobs among the <code>Robots</code>.</p>
+</blockquote>
+<blockquote>
+<p>The principal operations that the <code>JobManager</code> ADT supports are as follows:</p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p><strong>Create Instance</strong> <code>JobManager(int n)</code> → Create a new <code>JobManager</code> instance with <code>n</code> jobs with all IDs in <code>[1, n]</code>.</p>
+</blockquote></li>
+<li><blockquote>
+<p><strong>Add robot</strong> <code>addRobot(Robot robot)</code> → Add a new robot to the pool of robots that can complete jobs.</p>
+</blockquote></li>
+<li><blockquote>
+<p><strong>Check has robot</strong> <code>hasRobot(Robot robot)</code> → Check if <code>robot</code> exists in the pool of <code>Robots</code> maintained.</p>
+</blockquote></li>
+<li><blockquote>
+<p><strong>Remove robot</strong> <code>removeRobot(Robot)</code> → Remove a robot from the pool of robots; all jobs assigned to the robot that was removed will be “unassigned”.</p>
+</blockquote></li>
+<li><blockquote>
+<p><strong>Assign jobs</strong> <code>assignJobs(Robot robot, int jobId)</code> → Assign all unassigned jobs with id <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>≤</mo><annotation encoding="application/x-tex">\le</annotation></semantics></math> <code>jobId</code> to <code>robot</code>.</p>
+</blockquote></li>
+<li><blockquote>
+<p><strong>Check if job is assigned</strong> <code>isAssigned(int jobId)</code> → Checks if the job with id = <code>jobId</code> is assigned to any <code>Robot</code> in the pool.</p>
+</blockquote></li>
+<li><blockquote>
+<p><strong>Move some jobs</strong> <code>moveJobs(Robot srcRobot, dstRobot, int jobId)</code> → Move all jobs with id <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>≤</mo><annotation encoding="application/x-tex">\le</annotation></semantics></math> <code>jobID</code> from <code>srcRobot</code> to <code>dstRobot</code>.</p>
+</blockquote></li>
+<li><blockquote>
+<p><strong>Move all jobs</strong> <code>moveJobs(Robot srcRobot, dstRobot)</code> → Move all jobs from <code>srcRobot</code> to <code>dstRobot</code>.</p>
+</blockquote></li>
+<li><blockquote>
+<p><strong>Get assigned robot</strong> <code>getRobot(int jobId)</code> → Identify the <code>Robot</code> that is responsible for the job with <code>jobId</code> as its id.</p>
+</blockquote></li>
+<li><blockquote>
+<p><strong>Get highest priority job assigned to a robot</strong> <code>getHighestPriorityJob(Robot robot, int jobId)</code> → Assuming that the job id indicates priority (higher id ⇒ higher priority), obtain the highest priority job assigned to <code>robot</code> with job id <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>≤</mo><annotation encoding="application/x-tex">\le</annotation></semantics></math> <code>jobId</code>.</p>
+</blockquote></li>
+<li><blockquote>
+<p><strong>Check equality</strong> <code>equals(Object o)</code> → checks for equality with another object based on a specified notion of representation equality.</p>
+</blockquote></li>
+<li><blockquote>
+<p><strong>Get hashcode</strong> <code>hashCode()</code> → returns a hashcode that obeys the contract with <code>equals()</code> and that tries to minimize hash collisions through a <code>Robot</code> id-aware hash function.</p>
+</blockquote></li>
+</ul>
+<hr />
+<blockquote>
+<h2 id="your-task">Your Task</h2>
+</blockquote>
+<blockquote>
+<p>Your task is to implement the <code>JobManager</code> ADT in Java by implementing all methods corresponding to the Operations outlined above according to their respective specs detailed in the <code>JobManager</code> class file. You <strong>cannot</strong> change the spec of any methods, and you <strong>cannot</strong> change the <code>Robot</code> class in any way.</p>
+</blockquote>
+<hr />
+<blockquote>
+<h2 id="grading">Grading</h2>
+</blockquote>
+<blockquote>
+<p>You will answer some questions on PrairieLearn and you will submit your implementation to PrairieLearn and GitHub.</p>
+</blockquote>
+<blockquote>
+<p><strong>For the implementation aspect of this assignment, we will grade your GitHub submission, with more tests than are used on PrairieLearn. But the tests on PrairieLearn should offer some guidance. (And do not worry about the points on PrairieLearn for the programming question; they do not matter.)</strong></p>
+</blockquote>
+<blockquote>
+<p>This programming task is worth 6 points and the other questions on PrairieLearn are worth 3 points.</p>
+</blockquote>

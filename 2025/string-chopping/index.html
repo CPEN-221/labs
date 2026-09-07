@@ -1,0 +1,49 @@
+---
+layout: default
+title: "Lab 0: String Chopping"
+description: "Develop an algorithm that isolates letters by repeatedly removing parts of a string."
+hero_title: "Lab 0: String Chopping"
+eyebrow: "CPEN 221A · 2025 lab archive"
+term: "2025 archive"
+page_kind: "lab"
+lab_number: "0"
+permalink: "/2025/string-chopping/"
+source_file: "Lab 0: String Chopping.md"
+source_sha256: "0a9c7820864d4d53bdc688339aeac168ad6d8c5f7717d9467e8ccb513aa18d3d"
+mobile_toc_label: "Jump to a lab section"
+next_slug: "problem-solving"
+sections:
+  - id: "overview"
+    title: "Overview"
+---
+
+<aside class="archive-note" aria-label="Archive status">
+  <strong>Archived activity.</strong> This page preserves the 2025 lab.
+  Submission instructions, starter repositories, and external links may have changed.
+</aside>
+
+<blockquote>
+<p>In Edwardian England, the punishment of <a href="https://en.wikipedia.org/wiki/Hanged,_drawn_and_quartered">drawn, hanged and quartered</a> was the common penalty for treason. This activity involves nothing as grisly; here we are merely chopping up parts of a string.</p>
+</blockquote>
+<h2 id="overview">Overview</h2>
+<p>For a <code>String</code> <code>s</code>, we can refer the first third of a <code>s</code> as its <strong>head</strong>, the last third of it as its <strong>tail</strong> and the remaining characters as its <strong>middle</strong>.</p>
+<p>If <code>l</code> is the length of a <code>String</code>, then let <code>t = ceiling(l/3)</code> represent the length of the head and tail. The <strong>ceiling</strong> of a non-integer value <code>x</code> is the smallest integer <code>c</code> such that <code>c &gt;= x</code>. <code>ceiling(4.3)</code> is <code>5</code>. <code>ceiling(5)</code> is <code>5</code>.</p>
+<p>For the <code>String</code> <code>"marathon"</code>, the head is <code>"mar"</code>, the middle is <code>"at"</code>, and the tail is <code>"hon"</code>.</p>
+<p>One can chop a string by removing its head, middle or tail. Chopping off the head of <code>"marathon"</code> gives us the <code>String</code> <code>"athon"</code>. Chopping off the tail of <code>"marathon"</code> gives us the <code>String</code> <code>"marat"</code>, and chopping the middle gives us <code>"marhon"</code>.</p>
+<p>We will use <code>h</code> or <code>H</code> to denote chopping off the head of a string, <code>t</code> or <code>T</code> for chopping off the tail, and <code>m</code> or <code>M</code> for chopping off the middle.</p>
+<p>We can dice <code>"marathon"</code> to the single character <code>t</code> using the chop sequence <code>"THHH"</code>, which represents the following sequence of chops: <code>"marathon" -&gt; "marat" -&gt; "rat" -&gt; "at" -&gt; 't'</code>.</p>
+<p>The end goal of this activity is to develop a program that determines, for each letter of the alphabet, the chopping sequence that allows us to obtain that letter from a given string.</p>
+<blockquote>
+<h3 id="examples">Examples</h3>
+</blockquote>
+<ol type="1">
+<li><blockquote>
+<p>Input: <code>"x"</code>; Output: <code>{"NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "", "NO", "NO"}</code>. We do not need to chop the string to obtain <code>'x'</code>.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Input: <code>"qwertyuiopasdfghjkl"</code>; Output: <code>{"HTHMTT", "NO", "NO", "HHTMTH", "MTMHTT", "HHTHMT", "HHHMTT", "HHHMTH", "HTTMTT", "HHHHMT", "HHHHHT", "HHHHHH", "NO", "NO", "HTTMTH", "HTTHMT", "MTMTTT", "MTHTTT", "HHTMTT", "MTHTTH", "MHMTTH", "NO", "MTMTTH", "NO", "MHMTTT", "NO"}</code>.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Input: <code>"aaaaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaa"</code>; Output: <code>{"HHHHHHH", "HMHTTTT", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO", "NO"}</code></p>
+</blockquote></li>
+</ol>

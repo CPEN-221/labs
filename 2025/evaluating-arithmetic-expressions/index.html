@@ -1,0 +1,540 @@
+---
+layout: default
+title: "Lab 9: Evaluating Arithmetic Expressions"
+description: "Build infix and postfix evaluators and practise running and packaging Java applications."
+hero_title: "Lab 9: Evaluating Arithmetic Expressions"
+eyebrow: "CPEN 221A · 2025 lab archive"
+term: "2025 archive"
+page_kind: "lab"
+lab_number: "9"
+permalink: "/2025/evaluating-arithmetic-expressions/"
+source_file: "Lab 9: Evaluating Arithmetic Expressions.md"
+source_sha256: "b8e838757c1569d6cd8b33030b48ae2710b80b81265e175ab2dbc706c933e876"
+mobile_toc_label: "Jump to a lab section"
+previous_slug: "streams-and-lambdas"
+next_slug: "client-server-and-text-processing"
+sections:
+  - id: "overview"
+    title: "Overview"
+  - id: "learning-outcomes"
+    title: "Learning Outcomes"
+  - id: "grammar-for-arithmetic-expressions"
+    title: "Grammar for Arithmetic Expressions"
+  - id: "lexers-and-parsers"
+    title: "Lexers and Parsers"
+  - id: "implementing-evaluation-for-the-ast"
+    title: "Implementing Evaluation for the AST"
+  - id: "postfix-expression-evaluation"
+    title: "Postfix Expression Evaluation"
+  - id: "running-a-main-method-using-gradle"
+    title: "Running a main Method using gradle"
+  - id: "command-line-arguments"
+    title: "Command Line Arguments"
+  - id: "jar-files-and-bundling-classes"
+    title: "JAR Files and Bundling Classes"
+  - id: "automatically-generating-lexers-and-parsers"
+    title: "Automatically Generating Lexers and Parsers"
+  - id: "summary"
+    title: "Summary"
+  - id: "grading"
+    title: "Grading"
+---
+
+<aside class="archive-note" aria-label="Archive status">
+  <strong>Archived activity.</strong> This page preserves the 2025 lab.
+  Submission instructions, starter repositories, and external links may have changed.
+</aside>
+
+<h2 id="overview">Overview</h2>
+<blockquote>
+<p>In this assignment, you will add to a provided codebase to evaluate arithmetic expressions in infix and postfix notation. You are provided with a grammar that represents an arithmetic expression as well as a lexer for such expressions. You are also provided with a parser for infix expressions. You will understand how to use use recursive types (such as an abstract syntax tree) and stacks for this purpose. You will also learn some aspects of the tools we use: running <code>main</code> using Gradle, passing command line arguments, and creating JAR files to more easily distribute your application/program.</p>
+</blockquote>
+<blockquote>
+<p>❗️For certain aspects of this assignment, you may have to make adjustments based on the version of Gradle that you are using.</p>
+</blockquote>
+<blockquote>
+<p>ℹ️ Also read: <a href="https://ubc-ece.craft.me/cpen221-TheBuildProcess">The Build Process and Build Tools</a></p>
+</blockquote>
+<hr />
+<blockquote>
+<h2 id="learning-outcomes">Learning Outcomes</h2>
+</blockquote>
+<blockquote>
+<p><strong>Lexical Analysis and Parsing</strong></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Identify and describe the role of a lexer in tokenizing input strings into meaningful units (tokens) in programming languages.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Explain the function of a parser in interpreting sequences of tokens based on grammatical rules to produce structured data representations.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Understand and apply <em>recursive descent parsing</em> to handle operator precedence and expression grouping in arithmetic expressions.</p>
+</blockquote></li>
+</ul>
+<blockquote>
+<p><strong>Abstract Syntax Tree (AST) Construction and Evaluation</strong></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Examine how an Abstract Syntax Tree (AST) to represent an arithmetic expression can be created, preserving the structure and operator precedence of the input expression.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Extend the AST to evaluate expressions by implementing evaluate() methods in AST node classes, using a modular, object-oriented approach.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Implement and differentiate between infix and postfix evaluation by creating separate evaluation methods, recognizing the differences in operator placement and evaluation order.</p>
+</blockquote></li>
+</ul>
+<blockquote>
+<p><strong>Postfix Evaluation Using a Stack-Based Approach</strong></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Demonstrate understanding of postfix notation and its evaluation mechanics by implementing a stack-based evaluator for postfix expressions.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Analyze the advantages of postfix notation in terms of simplicity and efficiency for expression evaluation, particularly in environments where operator precedence can be complex.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Implement a stack-based algorithm for postfix evaluation, utilizing the lexer for token generation and correctly applying operators based on token type.</p>
+</blockquote></li>
+</ul>
+<blockquote>
+<p><strong>Software Project Setup and Execution Using Gradle</strong></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Configure Gradle to run a specific main method, understanding the structure and purpose of build.gradle files.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Pass and access command-line arguments in a Java program to dynamically influence program behavior based on user input.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Explain the purpose and advantages of JAR files in software development, including ease of distribution, platform independence, and deployment simplification.</p>
+</blockquote></li>
+</ul>
+<blockquote>
+<p><strong>Software Engineering in Practice</strong></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Use Gradle to create executable JAR files and demonstrate the process of running a Java application from the command line using JAR files.</p>
+</blockquote></li>
+<li><blockquote>
+<p>Reflect on and apply principles of object-oriented design in creating subclasses for individual AST nodes, emphasizing modularity, maintainability, and readability.</p>
+</blockquote></li>
+</ul>
+<hr />
+<h2 id="grammar-for-arithmetic-expressions">Grammar for Arithmetic Expressions</h2>
+<p>You should first review the grammar for arithmetic expressions, which looks like this (and there are other descriptions that are equally valid):</p>
+<pre class="python"><code>&lt;expression&gt; ::= &lt;term&gt; | &lt;expression&gt; &quot;+&quot; &lt;term&gt; | &lt;expression&gt; &quot;-&quot; &lt;term&gt;
+&lt;term&gt; ::= &lt;factor&gt; | &lt;term&gt; &quot;*&quot; &lt;factor&gt; | &lt;term&gt; &quot;/&quot; &lt;factor&gt;
+&lt;factor&gt; ::= &lt;exponent&gt; | &lt;factor&gt; &quot;^&quot; &lt;exponent&gt;
+&lt;exponent&gt; ::= &lt;primary&gt; | &quot;-&quot; &lt;primary&gt;
+&lt;primary&gt; ::= &lt;number&gt; | &quot;(&quot; &lt;expression&gt; &quot;)&quot;
+&lt;number&gt; ::= &lt;integer&gt; | &lt;integer&gt; &quot;.&quot; &lt;digits&gt;
+&lt;integer&gt; ::= &lt;digit&gt; | &lt;digit&gt; &lt;integer&gt;
+&lt;digits&gt; ::= &lt;digit&gt; | &lt;digit&gt; &lt;digits&gt;
+&lt;digit&gt; ::= &quot;0&quot; | &quot;1&quot; | &quot;2&quot; | &quot;3&quot; | &quot;4&quot; | &quot;5&quot; | &quot;6&quot; | &quot;7&quot; | &quot;8&quot; | &quot;9&quot;</code></pre>
+<p><strong>Expressions (<code>&lt;expression&gt;</code>)</strong></p>
+<ul>
+<li>Represents the top-level structure, allowing for addition (<code>+</code>) and subtraction (<code>-</code>) operations.</li>
+<li>Expressions are composed of terms combined with <code>+</code> and <code>-</code>, and this rule has the lowest precedence in the expression hierarchy.</li>
+</ul>
+<p><strong>Terms (<code>&lt;term&gt;</code>)</strong></p>
+<ul>
+<li>Represents multiplication (<code>*</code>) and division (<code>/</code>) operations, which have higher precedence than addition and subtraction.</li>
+<li>Terms are composed of factors combined with <code>*</code> and <code>/</code>.</li>
+</ul>
+<p><strong>Factors (<code>&lt;factor&gt;</code>)</strong></p>
+<ul>
+<li>Handles exponentiation (<code>^</code>), which has higher precedence than multiplication and division.</li>
+<li>Exponentiation is right-associative, so expressions like <code>2^3^4</code>are parsed as <code>2^(3^4)</code>.</li>
+</ul>
+<p><strong>Exponents (<code>&lt;exponent&gt;</code>)</strong></p>
+<ul>
+<li>Supports unary negation, allowing for negative numbers (e.g., <code>-5</code>).</li>
+<li>This rule distinguishes between a simple primary value and a negated one.</li>
+</ul>
+<p><strong>Primary Values (<code>&lt;primary&gt;</code>)</strong></p>
+<ul>
+<li>Represents the fundamental building blocks of expressions: numbers and sub-expressions enclosed in parentheses <code>( )</code>.</li>
+<li>Parentheses allow for grouping, which can override standard operator precedence.</li>
+</ul>
+<p><strong>Numbers (<code>&lt;number&gt;</code>)</strong></p>
+<ul>
+<li>Supports both integers and floating-point numbers.</li>
+<li>Floating-point numbers are represented by an integer part, a decimal point ., and a sequence of digits.</li>
+</ul>
+<p><strong>Integers and Digits (<code>&lt;integer&gt;</code>, <code>&lt;digits&gt;</code>, and <code>&lt;digit&gt;</code>)</strong></p>
+<ul>
+<li>Defines sequences of digits for integers and the fractional part of floating-point numbers.</li>
+<li>Represents individual numeric characters from 0 to 9.</li>
+</ul>
+<blockquote>
+<p>This grammar for arithmetic expressions avoids the use of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϵ</mi><annotation encoding="application/x-tex">\epsilon</annotation></semantics></math> or the null terminal. We could have reduced the number of production rules if we used <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϵ</mi><annotation encoding="application/x-tex">\epsilon</annotation></semantics></math>.</p>
+</blockquote>
+<hr />
+<h2 id="lexers-and-parsers">Lexers and Parsers</h2>
+<p>Now, you should understand and implement the process of breaking down an input expression into tokens using a lexer, and then structuring those tokens into an abstract syntax tree (AST) with a parser.</p>
+<p><strong>What are Abstract Syntax Trees?</strong></p>
+<blockquote>
+<p>An Abstract Syntax Tree (AST) is a hierarchical, tree that represents the syntax of code in a simplified, abstracted form. Each node in the AST represents a construct (such as an operation, variable, or literal) found in the source code, but unlike the raw syntax, it excludes unnecessary syntax details (like parentheses in expressions), focusing instead on the semantic structure.</p>
+</blockquote>
+<blockquote>
+<p>For an arithmetic expression like <code>3 + 5 * (2 - 8)</code>, the AST would look like this:</p>
+</blockquote>
+<pre class="bash"><code>      +
+     / \
+    3   *
+       / \
+      5   -
+         / \
+        2   8</code></pre>
+<p>A compiler constructs an AST when compiling a program. Here is an example using a snippet of Java code:</p>
+<pre class="java"><code>int a = 10;
+int b = 5;
+int result = a + b * (a - b);</code></pre>
+<p>The corresponding AST would look like this:</p>
+<figure class="lab-figure"><img src="../../assets/images/2025/java-abstract-syntax-tree.png" alt="An abstract syntax tree for three Java assignments, ending with result equal to b times the difference a minus b, plus a." loading="lazy"><figcaption>An abstract syntax tree for three Java assignments, ending with result equal to b times the difference a minus b, plus a.</figcaption></figure>
+
+<p><strong>Review the Lexer</strong>: The lexer reads the input string and breaks it down into tokens such as numbers, operators, and parentheses.</p>
+<p><strong>Review the Parser</strong>: The parser uses <strong>recursive descent</strong> to parse these tokens into an AST according to the rules of operator precedence and expression structure.</p>
+<p><a href="https://en.wikipedia.org/wiki/Recursive_descent_parser">Recursive descent parser - Wikipedia</a></p>
+<p><strong>Draw the AST</strong> for the expression <code>3 + 5 * (2 - 8)^2</code> to visualize the structure created by the parser.</p>
+<p><strong>Implement Missing Parser Logic</strong>: You may need to implement or correct parts of the parser, particularly focusing on creating nodes for different operations (<code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>^</code>).</p>
+<hr />
+<h2 id="implementing-evaluation-for-the-ast">Implementing Evaluation for the AST</h2>
+<p><strong>Define AST Node Types</strong>: The AST includes a base class ASTNode, and you will extend it by creating subclasses for each type of operation:</p>
+<ul>
+<li><code>NumberNode</code> to represent literal numbers.</li>
+<li><code>BinaryOpNode</code> as an abstract class for binary operations:
+<ul>
+<li>Specific subclasses for each binary operation, e.g., <code>AddNode</code>, <code>SubtractNode</code>, <code>MultiplyNode</code>, <code>DivideNode</code>, and <code>ExponentNode</code>.</li>
+</ul></li>
+<li>Implement <code>evaluate()</code>: Each of these nodes should implement an <code>evaluate()</code> method.</li>
+<li>Test your implementation with different expressions.</li>
+</ul>
+<hr />
+<h2 id="postfix-expression-evaluation">Postfix Expression Evaluation</h2>
+<p><strong>Learn Postfix Notation</strong>: Postfix notation (RPN) places operators after operands, making it simpler to evaluate expressions without needing parentheses or operator precedence rules.</p>
+<p><a href="https://en.wikipedia.org/wiki/Reverse_Polish_notation">Reverse Polish notation - Wikipedia</a></p>
+<p><strong>Postfix Evaluator</strong>: Implement a <code>PostfixEvaluator</code> class that:</p>
+<ul>
+<li>Uses the lexer to tokenize a postfix expression.</li>
+<li>Uses a stack to store operands.</li>
+<li>Pops two operands from the stack for each operator and pushes the result back.</li>
+</ul>
+<p><strong>Evaluate Expressions</strong>: Test the PostfixEvaluator on several expressions and compare the results with those produced by the infix evaluator.</p>
+<blockquote>
+<p>Caveat: Postfix expressions do not support unary operators directly. For the unary <code>-</code> (negative) operator, we will use <code>_</code> in our inputs to distinguish the operation from binary subtraction. You can update the lexer to deal with this operator. In infix form, we can use <code>_</code> and <code>-</code> for unary minus because we can distinguish between the two use cases.</p>
+</blockquote>
+<blockquote>
+
+</blockquote>
+<hr />
+<blockquote>
+<p>The remaining tasks in the assignment do not involve any submission but you will learn how to run and package your applications. So far, many of you may have run tests directly from your IDE You may have even executed the <code>main</code> method from the IDE. How do we run the <code>main</code> method of our program from the command line using gradle? How do we package all our classes into a JAR file for easy distribution? And you will see how we can automatically generate a lexer and a parser given a language's grammar.</p>
+</blockquote>
+<hr />
+<h2 id="running-a-main-method-using-gradle">Running a <code>main</code> Method using <code>gradle</code></h2>
+<p>In your <code>build.gradle</code> file, you should add the <strong>Application</strong> plugin, like this:</p>
+<pre class="python"><code>plugins {
+    id &#39;java&#39;        // Apply the Java plugin
+    id &#39;application&#39; // Apply the Application plugin to run Java applications
+}</code></pre>
+<p>You would also specify the class that contains the <code>main</code> method for your application by adding a block such as this:</p>
+<pre class="python"><code>application {
+    mainClass = &#39;Main&#39;
+}</code></pre>
+<p>In the example above, the assumption is that we want to call the <code>main()</code> method in a class named <code>Main</code> that is in the top-level package (unnamed). In the case of this specific assignment, we want to run <code>main</code> in the <code>Calculator</code> class, and the class is in the <code>arithmetic</code> package. So the <code>build.gradle</code> would contain this block:</p>
+<pre class="groovy"><code>application {
+    mainClass = &#39;arithmetic.Calculator&#39;
+}</code></pre>
+<p>We can now run the <code>main</code> method from the <strong>root</strong> directory of our project using the following command at the command line.</p>
+<pre class="bash"><code>gradle run</code></pre>
+<hr />
+<h2 id="command-line-arguments">Command Line Arguments</h2>
+<h3 id="directly-passing-command-line-arguments-to-the-jvm">Directly Passing Command Line Arguments to the JVM</h3>
+<p>Thus far, we seem to have written programs where all the input has been directly provided to functions directly as arguments, either in a <code>main</code> method or in a test case. But that is not how we would normally provide inputs to a program. One way to provide an input to a program is through <strong>command line arguments</strong>.</p>
+<p>If you have wondered why the signature for the <code>main</code> method includes a <code>String[] args</code> argument, now is the time to resolve that matter.</p>
+<p>Let us take the example of our <code>Calculator</code> class that has a <code>main</code> method. After we build our project, the <code>Calculator.class</code> file should be in the directory <code>build/classes/java/main/arithmetic</code>. Let us change the working directory to <code>build/classes/java/main</code>. We would do this by using the following command at the command line:</p>
+<pre class="groovy"><code>cd build/classes/java/main</code></pre>
+<p>We should be able to run the <code>main</code> method by invoking the Java Virtual Machine:</p>
+<pre class="groovy"><code>java arithmetic.Calculator</code></pre>
+<p>Take note of how we indicate the package name and the class when we provide <code>Calculator</code> to the JVM as the class that contains the <code>main</code> method we want to run. If <code>Calculator</code> does not have a <code>public static void main(String[] args)</code> method then we would get an error. Also notice that if we wanted to run <code>main</code> with <code>gradle run</code> we did not have to change our working directory (Gradle manages that detail for us).</p>
+<p>Command-line arguments are a way to pass information to a Java program at the time it is executed. These arguments are passed as strings and can be accessed in the main method of your program. The <code>args</code> parameter in <code>main</code> is an array of <code>String</code> objects, where each element in <code>args</code> represents an argument passed from the command line. This allows you to supply values or configurations to your program dynamically when it starts, without modifying the code.</p>
+<p>For instance, if we started our <code>Calculator</code>'s <code>main</code> method as</p>
+<pre class="groovy"><code>java arithmetic.Calculator 5 + 3</code></pre>
+<p>then the <code>args</code> array will have three elements: <code>"5", "+", "3"</code>. We can access these <code>String</code>s as <code>args[0]</code>, <code>args[1]</code> and <code>args[2]</code> respectively. We can use <code>args.length</code> to determine in any command line arguments were passed to the program.</p>
+<p>In our case, we may want to pass <code>5 + 3</code> as one single string that represents the expression to evaluate.</p>
+<p>We would do so as</p>
+<pre class="groovy"><code>java arithmetic.Calculator &quot;5 + 3&quot;</code></pre>
+<p>To actually use the command line argument, we would modify our <code>main</code> method in <code>Calculator</code> to be along the following lines:</p>
+<pre class="groovy"><code>package arithmetic;
+
+import static java.lang.System;
+
+public class Calculator {
+    public static void main(String[] args) {
+        if (args.length == 0) {
+            System.out.println(&quot;Usage: java arithmetic.Calculator &lt;arithmetic expression&gt;&quot;);
+            System.exit(-1);
+        }
+        String input = args[0];
+        Lexer lexer = new Lexer(input);
+        InfixParser parser = new InfixParser(lexer);
+        ASTNode ast = parser.parse();
+        System.out.println(&quot;AST: &quot; + ast);
+        System.out.println(ast.evaluate());
+    }
+}</code></pre>
+<blockquote>
+<p>In the example above, we used <code>System.exit()</code> to terminate our program. (We also had to add an <code>import</code> statement.) We used <code>-1</code> as the argument to <code>exit()</code>. If our program terminated normally then we would use <code>0</code> as the argument. The argument we pass to <code>exit()</code> is also called the <strong>status code</strong> when a program terminates. A non-zero status code <em>typically</em> means that program terminated because of an error. If we did not explicitly add a call to <code>System.exit()</code>, the Java compiler would -- in effect -- use <code>System.exit(0);</code> when a program terminates.</p>
+</blockquote>
+<h3 id="passing-command-line-arguments-using-gradle-run">Passing Command Line Arguments Using <code>gradle run</code></h3>
+<p>We saw earlier that if we set up <code>gradle</code> to run our application then we could so so using <code>gradle run</code>. To pass command line arguments in this approach we would add a flag when we invoke <code>gradle run</code>:</p>
+<pre class="groovy"><code>gradle run --args=&quot;arg1 arg2 arg3&quot;</code></pre>
+<p>Now <code>arg1</code>, <code>arg2</code> and <code>arg3</code> would be the three arguments passed to the program.</p>
+<p>If we wanted to pass arguments that have spaces included then we would need to enclose such arguments with single quotes. For example:</p>
+<pre class="groovy"><code>gradle run --args=&quot;&#39;5 + 3 * 2&#39;&quot;</code></pre>
+<h3 id="passing-command-line-arguments-using-the-intellij-idea-ide">Passing Command Line Arguments using the IntelliJ IDEA IDE</h3>
+<p>Passing command line arguments using the IDE is a bit more cumbersome. You would have to follow these steps:</p>
+<ul>
+<li><strong>Step 1: Open the Run/Debug Configurations</strong>
+<ul>
+<li>In IntelliJ, go to the top menu bar and select Run &gt; Edit Configurations.</li>
+<li>This will open the Run/Debug Configurations window where you can customize settings for running your application.</li>
+</ul></li>
+<li><strong>Step 2: Specify Command-Line Arguments</strong>
+<ul>
+<li>In the Run/Debug Configurations window, select your application configuration (e.g., the <code>Calculator</code> class).</li>
+<li>Look for the Program arguments field (usually under the Configuration section).</li>
+<li>Enter your command-line arguments in this field as you would from the command line:
+<ul>
+<li>Separate multiple arguments with spaces.</li>
+<li>Enclose arguments containing spaces in quotes.</li>
+<li>Example: "10 + 5 * 3" "another argument". In this case: <code>args[0]</code> will be "10 + 5 * 3" and <code>args[1]</code> will be "another argument".</li>
+</ul></li>
+</ul></li>
+<li><strong>Step 3: Apply and Run</strong>
+<ul>
+<li>Click Apply to save your configuration.</li>
+<li>Click OK to close the Run/Debug Configurations window.</li>
+<li>Run your application by selecting Run &gt; Run ‘YourConfigurationName’ or simply using the run button.</li>
+</ul></li>
+<li><strong>Example for Single Argument</strong>
+<ul>
+<li>If you’re passing a single arithmetic expression with spaces, enter it like this: "10 + 5 * 3" This will make the entire expression "10 + 5 * 3" available in <code>args[0]</code>.</li>
+</ul></li>
+</ul>
+<p>IntelliJ will use these arguments each time you run the configuration. You would change the arguments in the Program arguments field to try new inputs to your program.</p>
+<hr />
+<h2 id="jar-files-and-bundling-classes">JAR Files and Bundling Classes</h2>
+<p>When we want to share our implementation with others, we may not always want to share our source code. Because Java programs run on a Java Virtual Machine, which is independent of the underlying hardware platform, we can share our compiled <code>.class</code> files with others. But if our application is complex and involves many classes then we would have to share all the <code>.class</code> files. In such situations, we can use JAR files.</p>
+<blockquote>
+<p><strong>JAR</strong> stands for <strong>Java Archive</strong>. A JAR file is a package format used by Java to distribute and deploy classes, resources, and metadata in a single, compressed file. JAR files simplify the distribution of Java applications and libraries by bundling all the necessary components into one file.</p>
+</blockquote>
+<p><strong>Key Features of JAR Files</strong></p>
+<ol type="1">
+<li>Bundling Multiple Files: JAR files package multiple Java .class files, images, configuration files, and other resources into one file.</li>
+<li>Compression: JAR files use ZIP compression, reducing file size and making distribution more efficient.</li>
+<li>Portability: Since JAR files are platform-independent, they can be run on any system with a Java Virtual Machine (JVM).</li>
+<li>Executable Archives: JAR files can be set up as executable files, making them self-contained applications that can be run with a single command.</li>
+<li>Library Distribution: JAR files are widely used to share Java libraries, making it easy to add external libraries to Java projects.</li>
+<li>Executable JARs: By specifying a main class in the JAR’s manifest file, JAR files can be made executable, allowing users to run the application by simply executing the JAR file.</li>
+</ol>
+<p><strong>Creating JAR files using Gradle</strong></p>
+<p>One can create JAR files using the Java compiler but Gradle can also make this easy. Creating a JAR file for your project with Gradle is straightforward. Your Gradle setup from earlier already has the necessary configuration to build a JAR file, thanks to the java plugin. By default, Gradle packages your compiled classes and resources into a JAR file when you run the build task.</p>
+<p>You would add the following block to your <code>build.gradle</code> file to let Gradle know what the main class is, and you do this by referring to what has been set for the <code>application</code> plugin.</p>
+<pre class="groovy"><code>jar {
+    manifest {
+        attributes(
+                &#39;Main-Class&#39;: application.mainClass
+        )
+    }
+}</code></pre>
+<p>You can explicitly create the JAR file using the following command at the command line (you can also select this Gradle task from the IDE):</p>
+<pre class="bash"><code>gradle jar</code></pre>
+<p>After the build completes, the JAR file will be located in the <code>build/libs</code> directory. The file name will typically be something like <code>MyGradleProject-1.0-SNAPSHOT.jar</code>, based on your project name and version. For our arithmetic expressions project, we may get the following JAR file: <code>ArithmeticExpressions-1.0-SNAPSHOT.jar</code>.</p>
+<p>You can run the <code>main</code> method for the JAR file as follows:</p>
+<pre class="bash"><code>java -jar build/libs/ArithmeticExpressions-1.0-SNAPSHOT.jar</code></pre>
+<hr />
+<h2 id="automatically-generating-lexers-and-parsers">Automatically Generating Lexers and Parsers</h2>
+<p>The lexer and parser that you used so far were hand-coded. The tools for computing systems have evolved to make it much easier to generate lexers and parsers for a given grammar. One such tool is ANTLR.</p>
+<p>To use ANTLR, we would first re-write our grammar to suit ANTLR:</p>
+<pre class="java"><code>grammar Arithmetic;
+
+// Parser rules
+expr
+    : &#39;-&#39; expr                    # UnaryMinusExpr       // Unary minus
+    | expr &#39;^&#39; expr               # ExponentExpr         // Exponentiation
+    | expr op=(&#39;*&#39;|&#39;/&#39;) expr      # MulDivExpr           // Multiplication and division
+    | expr op=(&#39;+&#39;|&#39;-&#39;) expr      # AddSubExpr           // Addition and subtraction
+    | &#39;(&#39; expr &#39;)&#39;                # ParenExpr            // Parentheses
+    | FLOAT                       # FloatExpr            // Floating-point numbers
+    ;
+
+// Lexer rules
+FLOAT
+    : DIGIT+ &#39;.&#39; DIGIT* | &#39;.&#39; DIGIT+;  // Matches floating-point numbers
+fragment DIGIT
+    : [0-9];                          // Fragment rule to define digits
+
+// Tokens for whitespace
+WS
+    : [ \t\r\n]+ -&gt; skip;              // Skip whitespaces</code></pre>
+<p>We can provide this grammar as input to ANTLR and it would then produce the lexer and parser. One way to do this is to download and install ANTLR and invoke it from the command line:</p>
+<pre class="java"><code>antlr4 -Dlanguage=Java Arithmetic.g4</code></pre>
+<p>In the command above, we are telling ANTLR that our grammar is stored in the file <code>Arithmetic.g4</code> and that we want Java code for the lexer and parser. ANTLR will then generate the following files:</p>
+<ul>
+<li><code>ArithmeticLexer.java</code></li>
+<li><code>ArithmeticParser.java</code></li>
+<li><code>ArithmeticBaseVisitor.java</code> (if you want to use a visitor pattern)</li>
+<li><code>ArithmeticBaseListener.java</code> (if you want to use a listener pattern)</li>
+</ul>
+<p>We can then use this implementation to complete the parser.</p>
+<p>But before we do so, I will add that one need not download and correctly install ANTLR from scratch. We can add rules to our <code>build.gradle</code> file to include ANTLR as a dependency and then to generate the Java files.</p>
+<p>To do this, we add the following to <code>build.gradle</code>:</p>
+<ul>
+<li>In the <code>plugins</code> section, we add: <code>id 'antlr'</code></li>
+<li>In the dependencies section, we add: <code>antlr 'org.antlr:antlr4:4.9.3'</code> (you can add the latest version, if you want)</li>
+</ul>
+<p>By default, ANTLR source files (like <code>Arithmetic.g4</code>) should be in the directory <code>src/main/antlr</code>, which is the Gradle convention for source code. You can specify a different source directory (you can do this for Java too) by adding the following section for <code>sourceSets</code>:</p>
+<pre class="java"><code>sourceSets {
+    main {
+        antlr {
+            srcDir &#39;src/antlr&#39; // Specify your preferred directory
+        }
+    }
+}</code></pre>
+<p>By including ANTLR as a plugin, we get a new Gradle operation that allows us to generate the Java code for lexing and parsing:</p>
+<pre class="java"><code>gradle generateGrammarSource</code></pre>
+<p>We can also build all our code (grammar + Java code, say) using</p>
+<pre class="java"><code>gradle build</code></pre>
+<p>The code that ANTLR generates is normally placed in <code>build/generated-src/antlr/main</code> and you can import those classes in your Java code.</p>
+<p>We can now create our own <code>ArithmeticParser</code> using the ANTLR generate code.</p>
+<pre class="java"><code>import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.tree.*;
+
+public class ArithmeticParser {
+    public static void main(String[] args) throws Exception {
+        String input = &quot;3 + 5 * (2 - 8)^2 - -10&quot;;
+        CharStream charStream = CharStreams.fromString(input);
+
+        ArithmeticLexer lexer = new ArithmeticLexer(charStream);
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        ArithmeticParser parser = new ArithmeticParser(tokens);
+
+        ParseTree tree = parser.expr();
+        System.out.println(tree.toStringTree(parser));
+
+        EvalVisitor eval = new EvalVisitor();
+        double result = eval.visit(tree);
+
+        System.out.println(&quot;Result: &quot; + result);
+    }
+}
+
+/* Visitor implementation to evaluate expressions */
+class EvalVisitor extends ArithmeticBaseVisitor&lt;Double&gt; {
+    @Override
+    public Double visitAddSubExpr(ArithmeticParser.AddSubExprContext ctx) {
+        double left = visit(ctx.expr(0));
+        double right = visit(ctx.expr(1));
+        if (ctx.op.getType() == ArithmeticParser.ADD) {
+            return left + right;
+        } else {
+            return left - right;
+        }
+    }
+
+    @Override
+    public Double visitMulDivExpr(ArithmeticParser.MulDivExprContext ctx) {
+        // your code here
+        return 0.0;
+    }
+
+    @Override
+    public Double visitExponentExpr(ArithmeticParser.ExponentExprContext ctx) {
+        // your code here
+        return 0.0;
+    }
+
+    @Override
+    public Double visitUnaryMinusExpr(ArithmeticParser.UnaryMinusExprContext ctx) {
+        return -visit(ctx.expr());
+    }
+
+    @Override
+    public Double visitParenExpr(ArithmeticParser.ParenExprContext ctx) {
+        return visit(ctx.expr());
+    }
+
+    @Override
+    public Double visitFloatExpr(ArithmeticParser.FloatExprContext ctx) {
+        return Double.parseDouble(ctx.getText());
+    }
+}</code></pre>
+<p>Now you should have the tools to develop a parser for your own language (after you have defined its grammar)!</p>
+<hr />
+<blockquote>
+<h2 id="summary">Summary</h2>
+</blockquote>
+<blockquote>
+<p>In this assignment, you explored the core components of parsing and evaluating arithmetic expressions in Java. You began by building a lexer to tokenize input expressions, then used a recursive descent parser to construct an Abstract Syntax Tree (AST) that captures the structure and precedence of operators in infix notation. By implementing specific <code>evaluate()</code> methods within the AST nodes, you gained experience with recursive types, subtyping and working with abstract syntax trees.</p>
+</blockquote>
+<blockquote>
+<p>You also implemented a stack-based approach to evaluate postfix (RPN) expressions, allowing you to compare infix and postfix notations and understand the efficiency of postfix for certain evaluation tasks.</p>
+</blockquote>
+<blockquote>
+<p>You learned how to set up a Java project using Gradle, configure it to run, pass command line arguments, and package your application it into an executable JAR file.</p>
+</blockquote>
+<blockquote>
+<p>Lastly, you should have learnt that it is possible to automatically generate lexers and parsers given a language's grammar because much of the code is direct string processing. ANTLR is one such tool and you should have gained some experience with ANTLR. You should have also realized that one need not manually download libraries in some situations; we can include these libraries as dependencies in our Gradle configuration file and Gradle will download and use these libraries (but we need to have access to the Internet for this to work).</p>
+</blockquote>
+<blockquote>
+<p>This assignment should have provided you with skills in language processing, from lexing and parsing to expression evaluation and project setup.</p>
+</blockquote>
+<hr />
+<blockquote>
+<h2 id="grading">Grading</h2>
+</blockquote>
+<blockquote>
+<p>You should submit your work by pushing your implementation for infix and postfix expression evaluation to Github. <em>There is no submission on PrairieLearn.</em></p>
+</blockquote>
+<blockquote>
+<p>A submission is partially correct for infix expression evaluation or postfix expression evaluation if it passes 80% (but not 100%) of the tests for that aspect of the assignment.</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th><strong>Achievement</strong></th>
+<th><strong>Grade</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Neither evaluator is adequately complete</td>
+<td>F = 0/10</td>
+</tr>
+<tr>
+<td>Partial correctness for both evaluators</td>
+<td>C = 5/10</td>
+</tr>
+<tr>
+<td>One evaluator is fully correct; the other is missing or is incorrect</td>
+<td>C+ = 6/10</td>
+</tr>
+<tr>
+<td>One evaluator is fully correct and the other is partially correct</td>
+<td>B = 7/10</td>
+</tr>
+<tr>
+<td>Both evaluators are fully correct</td>
+<td>A = 9/10</td>
+</tr>
+</tbody>
+</table>

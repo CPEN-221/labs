@@ -1,0 +1,187 @@
+---
+layout: default
+title: "Lab 7: Interfaces, Subtypes, and Representation Invariants"
+description: "Extend the JobManager with robot subtypes, scheduling policies, records, and comparators."
+hero_title: "Lab 7: Interfaces, Subtypes, and Representation Invariants"
+eyebrow: "CPEN 221A · 2025 lab archive"
+term: "2025 archive"
+page_kind: "lab"
+lab_number: "7"
+permalink: "/2025/interfaces-subtypes-and-representation-invariants/"
+source_file: "Lab 7: Interfaces + Subtypes + Rep Invariants.md"
+source_sha256: "876effed9c9efd7774a397c6116857235c60e8a8c17a16242b13bb43af41ed18"
+mobile_toc_label: "Jump to a lab section"
+previous_slug: "representation-invariants-and-job-manager"
+next_slug: "streams-and-lambdas"
+sections:
+  - id: "overview"
+    title: "Overview"
+  - id: "learning-goals"
+    title: "Learning Goals"
+  - id: "interfaces"
+    title: "Interfaces"
+  - id: "abstract-classes"
+    title: "Abstract Classes"
+  - id: "record-classes"
+    title: "Record Classes"
+  - id: "comparators"
+    title: "Comparators"
+  - id: "task"
+    title: "Task"
+  - id: "grading"
+    title: "Grading"
+---
+
+<aside class="archive-note" aria-label="Archive status">
+  <strong>Archived activity.</strong> This page preserves the 2025 lab.
+  Submission instructions, starter repositories, and external links may have changed.
+</aside>
+
+<h2 id="overview">Overview</h2>
+<p>You will continue to work with the same framework from the previous two labs: that of the <code>JobManager</code>. In this activity, we will enhance the system by adding functionality to the robots. Each robot now maintains the set of jobs it is assigned to complete. Each job is also augmented with additional information: an execution time and a deadline. The execution time for a job is the time needed by a robot to complete the job; the deadline is the time by which the job must be completed. We will assume that all jobs are ready to execute at time <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">t = 0</annotation></semantics></math>. When a robot is asked to complete all the jobs assigned to it, the robot could use, for now, one of two scheduling policies to sequence the jobs; the two policies are shortest job first and earliest deadline first. When a robot completes jobs assigned to it then it also produces some statistics on job completions.</p>
+<hr />
+<blockquote>
+<h2 id="learning-goals">Learning Goals</h2>
+</blockquote>
+<blockquote>
+<p>This activity focuses on:</p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p><strong>Interfaces</strong>: You will see how interfaces are used to define the basic operations that a data type can perform, and how multiple implementations of the same interface are used. You will be able to implement an implementation that conforms to an interface. If the interface defines a type <code>T</code> and we have two classes, <code>S1</code> and <code>S2</code>, which implement the interface <code>T</code> then <code>S1</code> and <code>S2</code> are subtypes of <code>T</code>.</p>
+</blockquote></li>
+<li><blockquote>
+<p><strong>Abstract Classes</strong>: When we have more than one implementation of an interface, we may occasionally see the need to share code between the implementations. In Java, we could achieve this by defining an abstract class that implements some of the shared code. We <strong>cannot</strong> create instances of an abstract class. You will <strong>extend</strong> an abstract class and implement a concrete class that can be instantiated.</p>
+</blockquote></li>
+<li><blockquote>
+<p><strong>The <code>Record</code> Feature</strong>: A recent addition to Java are <code>Record</code> classes that simplify the creation and use of immutable types. You will use <code>Record</code> classes to represent, for instance, the <code>Job</code> type.</p>
+</blockquote></li>
+<li><blockquote>
+<p><strong>Comparators</strong>: We often find the need to provide a function as an input to another function. One of the most common such use-cases is in <strong>sorting</strong> routines, where we want to invoke a sort function and provide it with another function that can be used by the sort function to determine the order between pairs of items. You will implement a comparator to achieve a desired sorting order.</p>
+</blockquote></li>
+<li><blockquote>
+<p><strong>Representation Invariants</strong>: We will emphasize, once again, the use of representation invariants to develop robust data types.</p>
+</blockquote></li>
+</ul>
+<hr />
+<h2 id="interfaces">Interfaces</h2>
+<p>We have defined the <code>Robot</code> type as an <code>interface</code>. In Java (and other languages), this feature allows us to simply indicate what are the operations that are permitted for this type. (Of late, <a href="https://www.baeldung.com/java-interfaces">we can do more with interfaces</a> but originally one could not include <strong>any</strong> implementation as part of an interface. Recent changes are more syntactic sugar and improve productivity, but are not strictly necessary.)</p>
+<p>The <code>Robot</code> interface permits the following operations:</p>
+<ul>
+<li><code>isNull</code>: checks if a <code>Robot</code> is a null robot or not;</li>
+<li><code>getId</code>: obtain a <code>Robot</code>‘s id;</li>
+<li><code>assignJob</code>: assign a job to a <code>Robot</code>;</li>
+<li><code>removeJob</code>: remove a job from a <code>Robot</code>;</li>
+<li><code>getJobs</code>: obtain the set of jobs currently assigned to a <code>Robot</code>;</li>
+<li><code>completeJobs</code>: complete the jobs assigned to a <code>Robot</code> and obtain some scheduler statistics.</li>
+</ul>
+<p>An <code>interface</code> allows us to define what operations must be supported but these operations must be <strong>implemented</strong> by a concrete class for us to be able to instantiate values of this type.</p>
+<p>In our case, we want to define two types of <code>Robot</code>s: an <code>SJFRobot</code> that completes jobs in shortest-job-first order and an <code>EDFRobot</code> that completes jobs in earliest-deadline-first order. We would say that these two types implement the <code>Robot</code> interface. A <code>List&lt;Robot&gt;</code> could contain instances of <code>SJFRobot</code>s and <code>EDFRobot</code>s.</p>
+<hr />
+<h2 id="abstract-classes">Abstract Classes</h2>
+<p>We want to implement the two <code>Robot</code> types (we can implement even more if we wanted to). <strong>But</strong>, at the least, we would likely have identical implementations of the <code>getId</code> method in both implementations. We would like to avoid implementing an identical method (DRY principle) in both <code>SJFRobot</code> and <code>EDFRobot</code>. To achieve this, we can create an abstract class that implements the <code>Robot</code> interface and provides an implementation of, say, <code>getId</code>.</p>
+<p>We define the <code>AbstractRobot</code> class that is an <code>abstract class</code> in Java. The <code>AbstractRobot</code> class implements the <code>Robot</code> interface so it is intended to be a subtype of <code>Robot</code>. Our implementation of <code>AbstractRobot</code>, principally has a constructor that allows us to set the <code>Robot</code>‘s id and the <code>getId</code> method.</p>
+<p>Because our <code>AbstractRobot</code> is an <code>abstract class</code>, we do not have to implement every operation in the <code>Robot</code> interface. Any concrete class implementing the <code>Robot</code> interface must support all the operations in that interface.</p>
+<p>We can now <strong>extend</strong> <code>AbstractRobot</code> to implement <code>SJFRobot</code> and <code>EDFRobot</code>. (You have been given the implementation of <code>SJFRobot</code> and you must implement <code>EDFRobot</code>.) We can extend <code>AbstractRobot</code> to define a new <code>abstract class</code> or a concrete <code>class</code>.</p>
+<p>We can only create instances of concrete <code>class</code>es. Using the <code>new</code> operator with an <code>abstract class</code> or an <code>interface</code> is a syntax error that is identified by the compiler. In our code base:</p>
+<pre class="java"><code>Robot r1 = new Robot(1); // syntax error
+Robot r2 = new AbstractRobot(2); // syntax error
+Robot r3 = new SJFRobot(3); // correct</code></pre>
+<p>Java’s recent support for default implementation in an <code>interface</code> has reduced the need for <code>abstract class</code>es in some situations.</p>
+<p>Our <code>AbstractRobot</code> class also includes definitions of <code>equals</code> and <code>hashCode</code>. We do so because we have chosen to define equality for <code>Robot</code>‘s on the basis of their id alone, and this can be defined using the <code>abstract class</code>. We have also indicated that these two methods are <code>final</code>: this means that <code>class</code>es that extend <code>AbstractRobot</code> are not allow to override this implementation with their own.</p>
+<p>Our <code>AbstractRobot</code> does have a representation and is capable of most of the work we need of our <code>Robot</code> implementation. The only specialization we need is for a concrete <code>Robot</code> implementation to define the priority rule for job scheduling.</p>
+<p>Because <code>AbstractRobot</code> has no default constructor (a <strong>default constructor</strong> is a constructor that takes no arguments), any <code>class</code> that extends <code>AbstractRobot</code> must invoke the constructor for <code>AbstractRobot</code> and this is done using the <code>super</code> keyword. See the implementation of <code>SJFRobot</code>.</p>
+<p>A concrete class that implements an <code>interface</code> <strong>must</strong> implement all the methods specified in the interface unless a default implementation is provided. An <code>abstract class</code> that implements an <code>interface</code> may not implement all the methods specified in the <code>interface</code>; the methods not implemented in an <code>abstract class</code> must be implemented by the concrete <code>class</code> that extends the <code>abstract class</code>. After all, a concrete <code>class</code> that implements an <code>interface</code> should support <strong>all the operations specified in the <code>interface</code></strong>.</p>
+<blockquote>
+<p>In Java, a <code>class</code> may only extend one other class but a <code>class</code> may implement more than one <code>interface</code>. (Other languages do this -- <em>multiple inheritance</em> -- differently.) What happens if a <code>class</code> were to <code>implement</code> two <code>interface</code>s, each with a method <code>f</code> and identical signatures? You can read the Java documentation for such situations if you are interested but such conflicts are best avoided (they are often the result of poor design choices earlier).</p>
+</blockquote>
+<hr />
+<h2 id="record-classes">Record Classes</h2>
+<p>We have implemented the <code>Job</code> and <code>SchedulerStats</code> types as <a href="https://docs.oracle.com/en/java/javase/17/language/records.html"><code>record</code> classes</a>. Let us look at the implementation of the <code>Job</code> type:</p>
+<pre class="java"><code>/**
+ * An immutable representation of a job.
+ * A job is characterized by a unique identifier,
+ * an execution time (time needed to complete the job),
+ * and a deadline (the time by which the job must be finished).
+ * @param jobId the job&#39;s identifier, {@code jobId} &gt; 0
+ * @param deadline the job&#39;s deadline, {@code deadline} &gt;= 0
+ * @param executionTime the job&#39;s execution time, {@code executionTime} &gt;= 0
+ */
+public record Job(int jobId, int deadline, int executionTime) {
+
+    /**
+     * Obtain a null job, which can be used as a sentinel.
+     * A null job has an identifier of 0.
+     * @return a null job
+     */
+    public static Job getNullJob() {
+        return new Job(0, 0, 0);
+    }
+}</code></pre>
+<p>A <code>Job</code> includes a <code>jobId</code>, a <code>deadline</code> and an <code>executionTime</code>. Notice how we do not have to use the keyword <code>class</code> or declare the instance variables. By using a <code>record</code> class, we simply define the signature for the constructor and the Java compiler automatically uses the parameters for the constructor to define the representation. The Java compiler also adds some of the basic observer methods: <code>jobId()</code> to obtain the job id, <code>deadline()</code> to obtain the deadline and <code>executionTime()</code> to obtain the execution time of the job. We can add some other methods if we need them (like we have done with <code>getNullJob()</code>.)</p>
+<p>Record classes eliminate the need to write some of the obvious boilerplate code for getters when we want an immutable type implementation.</p>
+<hr />
+<h2 id="comparators">Comparators</h2>
+<p>In our implementation of the different <code>Robot</code> types, we want to be able to sort jobs based on different aspects of a job. If we look at the implementation of <code>AbstractRobot</code>, we have chosen to represent the set of jobs using a <code>TreeSet</code>. A <code>TreeSet</code> is called so because the elements of the set are stored using a <strong>binary search tree</strong>, which keeps items in sorted order. We would like to keep the jobs sorted using the execution time. To do so, when we create an instance of <code>TreeSet</code>, we would like to provide it with a function that can be used to compare two jobs.</p>
+<p>What we want is to pass a method <code>compare(Job j1, Job j2)</code> that can be used to order jobs <code>j1</code> and <code>j2</code>. If <code>compare(j1, j2)</code> returns <code>0</code> then the two jobs are considered equal. If <code>compare(j1, j2)</code> returns a value less (greater) than 0 then <code>j1</code> is considered smaller (greater) than <code>j2</code>. Java does not allow us to directly pass a function as a parameter to the <code>TreeSet</code> constructor. (Other languages permit us to pass functions directly to other functions.) In Java, we have to wrap all such ideas within an instance of a class.</p>
+<p>To help us achieve this, Java defines a parameterized <code>Comparator</code> interface. This interface has an operation <code>compare</code> that we need to define. Because we want to compare two instances of <code>Job</code>, the corresponding interface we want to implement is <code>Comparator&lt;Job&gt;</code>. When we implement this interface, we can define the <code>compare</code> operation.</p>
+<p>For <code>SJFRobot</code>, we want the following implementation:</p>
+<pre class="java"><code>class SJFJobComparator implements Comparator&lt;Job&gt; {
+ public int compare(Job job1, Job job2) {
+            int gap = job1.executionTime() - job2.executionTime();
+            if (gap != 0) {
+                return gap;
+            }
+            else {
+                return job1.jobId() - job2.jobId();
+            }
+        }
+}</code></pre>
+<p>The <code>compare</code> method uses the execution times of the two jobs; in the case that two jobs have the same execution time then we use the job ids to compare the jobs. (By tie-breaking this way, we can store multiple objects in a <code>TreeSet</code> that may have the same execution time without the <code>TreeSet</code> implementation thinking that the two jobs are identical and replacing one with another when we add jobs to the set.)</p>
+<p>Now, we can create an instance of <code>TreeSet</code> as follows:</p>
+<pre class="java"><code>SJFJobComparator sjfComparator = new SJFComparator();
+TreeSet&lt;Job&gt; jobSet = new TreeSet&lt;&gt;(sjfComparator);</code></pre>
+<p>We abbreviate these three steps into one step in the skeleton code and pass the comparator as a priority rule to the <code>AbstractRobot</code> constructor.</p>
+<pre class="java"><code>new Comparator&lt;Job&gt;() {
+        @Override
+        public int compare(Job job1, Job job2) {
+            int gap = job1.executionTime() - job2.executionTime();
+            if (gap != 0) {
+                return gap;
+            }
+            else {
+                return job1.jobId() - job2.jobId();
+            }
+        }
+    });</code></pre>
+<blockquote>
+<p>The <code>Comparator</code> interface is an example of a <strong>functional interface</strong>: an interface with exactly one operation that is used primarily to pass functions as arguments to other functions.</p>
+</blockquote>
+<hr />
+<blockquote>
+<h2 id="task">Task</h2>
+</blockquote>
+<ol type="1">
+<li><blockquote>
+<p><strong>Start by implementing <code>EDFRobot</code></strong>. Understand the type hierarchy of <code>Robot</code> ← <code>AbstractRobot</code> ← <code>EDFRobot</code>.</p>
+</blockquote></li>
+<li><blockquote>
+<p>After you have implemented <code>EDFRobot</code>, you can run the provided tests. You will see that several tests fail. <strong>Begin with <code>testSJFRobot</code>. What is the failure?</strong> Debug the implementation to fix this problem. The bug here does not have to do with subtyping. We have three jobs, with execution times 5, 5 and 15, respectively. Per SJF order, we would schedule the first job with execution time 5 and it would finish at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">t=5</annotation></semantics></math> for a completion time of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>5</mn><annotation encoding="application/x-tex">5</annotation></semantics></math>. The second job with execution time 5 would finish at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>10</mn></mrow><annotation encoding="application/x-tex">t=10</annotation></semantics></math>. The job with execution time 15 will finish at <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mn>25</mn></mrow><annotation encoding="application/x-tex">t=25</annotation></semantics></math>. The average completion time is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mfrac><mrow><mn>5</mn><mo>+</mo><mn>10</mn><mo>+</mo><mn>25</mn></mrow><mn>3</mn></mfrac><annotation encoding="application/x-tex">\frac{5+10+25}{3}</annotation></semantics></math>.</p>
+</blockquote></li>
+<li><blockquote>
+<p>After fixing the first bug, <strong>verify that your implementation of <code>EDFRobot</code> is also correct.</strong></p>
+</blockquote></li>
+<li><blockquote>
+<p>Then look at the <strong>failure of <code>testJobManager</code></strong>. Why does this test fail? What you should notice is that the test results indicate that 5 jobs were executed when we only had 3 jobs. Now examine the representation of <code>JobManager</code>. The representation is different from the earlier representations. You have been given a <code>checkRep</code> method. Is it complete? Correct the <code>checkRep</code> method and find the bug in the implementation of <code>JobManager</code>. Finish this activity by fixing that bug.</p>
+</blockquote></li>
+<li><blockquote>
+<p><strong>Notice that a <code>JobManager</code> can handle <code>Robot</code>s of slightly different types</strong>: it can work with a mix of <code>SJFRobot</code>s and <code>EDFRobot</code>s. At the same time, the code in <code>JobManager</code> is not aware of these types of <code>Robot</code>s and this is one of the powers of interfaces and subtypes.</p>
+</blockquote></li>
+</ol>
+<hr />
+<blockquote>
+<h2 id="grading">Grading</h2>
+</blockquote>
+<blockquote>
+<p>You will submit work on PrairieLearn only. The <code>JobManager</code> programming component of this assignment is worth 6 points and the other questions are worth 3 points.</p>
+</blockquote>
