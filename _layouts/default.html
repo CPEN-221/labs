@@ -44,16 +44,6 @@
       </div>
     </section>
 
-    <div class="typeface-tools">
-      <label>
-        <span>Reading type</span>
-        <select data-typeface-picker aria-label="Reading typeface combination">
-          <option value="plex">IBM Plex Serif + IBM Plex Sans + IBM Plex Mono</option>
-          <option value="google-sans">Google Sans Flex + Google Sans Code</option>
-        </select>
-      </label>
-    </div>
-
     <details class="mobile-toc">
       <summary>{{ page.mobile_toc_label | default: 'Jump to a section' }}</summary>
       <nav aria-label="Mobile page sections">
@@ -101,6 +91,16 @@
           </nav>
         {% endif %}
       </main>
+    </div>
+
+    <div class="typeface-tools">
+      <label>
+        <span>Typeface option</span>
+        <select data-typeface-picker aria-label="Typeface option">
+          <option value="plex">IBM Plex Serif + IBM Plex Sans + IBM Plex Mono</option>
+          <option value="google-sans">Google Sans Flex + Google Sans Code</option>
+        </select>
+      </label>
     </div>
 
     <footer class="site-footer">

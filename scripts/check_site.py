@@ -203,6 +203,7 @@ def check_source(errors: list[str]) -> None:
     layout = (SITE_ROOT / "_layouts" / "default.html").read_text(encoding="utf-8")
     for required in (
         "data-typeface-picker",
+        "<span>Typeface option</span>",
         "lab-source-sha256",
         "relative_url",
         "https://cpen-221.github.io/textbook/",
@@ -210,6 +211,15 @@ def check_source(errors: list[str]) -> None:
     ):
         if required not in layout:
             fail(errors, f"layout is missing {required}")
+    if not (
+        layout.find("</main>")
+        < layout.find('class="typeface-tools"')
+        < layout.find('class="site-footer"')
+    ):
+        fail(
+            errors,
+            "typeface option must appear after the page content and before the footer",
+        )
 
     css = (SITE_ROOT / "assets" / "css" / "main.scss").read_text(encoding="utf-8")
     if css.count("{") != css.count("}"):
@@ -264,7 +274,7 @@ def check_build(errors: list[str]) -> None:
         if missing_landmarks:
             fail(errors, f"{display}: missing landmarks: {', '.join(sorted(missing_landmarks))}")
         if parser.typeface_pickers != 1:
-            fail(errors, f"{display}: expected one reading-type selector")
+            fail(errors, f"{display}: expected one typeface-option selector")
         if not "".join(parser.title_parts).strip():
             fail(errors, f"{display}: missing page title")
         for identifier in parser.duplicate_ids:
@@ -275,7 +285,7 @@ def check_build(errors: list[str]) -> None:
         source = page.read_text(encoding="utf-8")
         choices = set(re.findall(r'<option value="([^"]+)">', source))
         if choices != TYPEFACE_CHOICES:
-            fail(errors, f"{display}: reading-type choices do not match the contract")
+            fail(errors, f"{display}: typeface-option choices do not match the contract")
 
         for attribute, url in parser.references:
             local = local_target(page, url)
