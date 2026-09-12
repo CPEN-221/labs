@@ -16,7 +16,8 @@ sections:
 
 # Fall 2026 {#current-offering}
 
-Activities for the current offering will appear here as they are released.
+**This website will not be used for labs in Fall 2026.** 
+Please check Canvas to access the labs.
 
 # Archive {#archive}
 
